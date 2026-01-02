@@ -1,587 +1,999 @@
-# RedButtonQuit - Product Plan
+# RedButtonQuit - Technical Specification
 
-**Document Version:** 1.0
-**Last Updated:** December 5, 2025
-**Status:** Planning Phase
-
----
-
-## 1. Executive Summary
-
-RedButtonQuit is a lightweight macOS utility that changes the behavior of the red "close" button (the leftmost traffic light button) to quit applications entirely rather than just closing the current window. This addresses a fundamental UX difference between macOS and Windows that frustrates users transitioning between platforms.
+**Version**: 1.0
+**Last Updated**: December 2025
+**Target Platform**: macOS Sequoia (15.x)
 
 ---
 
-## 2. Problem Statement
+## Table of Contents
 
-### The macOS Window Close Paradigm
-
-On macOS, clicking the red close button only closes the current window—the application continues running in the background. This is by design: macOS treats windows and applications as separate concepts. Users can have an app running with no visible windows, and the app remains accessible via the Dock or Cmd+Tab.
-
-### User Frustration Points
-
-1. **Platform Switchers:** Users coming from Windows expect clicking the "X" button to quit the application. The macOS behavior feels inconsistent and wastes system resources in their mental model.
-
-2. **Resource Consciousness:** Users see applications persisting in their Dock and assume they're consuming memory/CPU unnecessarily (even if macOS manages this efficiently).
-
-3. **Muscle Memory:** The expectation that closing a window quits an app is deeply ingrained for many users and creates daily friction.
-
-4. **Inconsistent Behavior:** Some macOS apps DO quit when closing the last window (Preview, Calculator, System Preferences), making the behavior feel arbitrary.
-
-### The Underlying Need
-
-Users want predictable, consistent behavior: "When I close all windows of an app, I'm done with that app—quit it."
+1. [Technical Overview](#1-technical-overview)
+2. [System Requirements](#2-system-requirements)
+3. [Architecture Diagram](#3-architecture-diagram)
+4. [Core Components](#4-core-components)
+5. [Key APIs and Frameworks](#5-key-apis-and-frameworks)
+6. [Data Flow](#6-data-flow)
+7. [Permission Model](#7-permission-model)
+8. [Configuration Storage](#8-configuration-storage)
+9. [Build and Distribution](#9-build-and-distribution)
+10. [Testing Strategy](#10-testing-strategy)
+11. [Security Considerations](#11-security-considerations)
+12. [Performance Considerations](#12-performance-considerations)
+13. [Compatibility](#13-compatibility)
+14. [Dependencies](#14-dependencies)
+15. [Known Limitations](#15-known-limitations)
 
 ---
 
-## 3. Solution Overview
+## 1. Technical Overview
 
-RedButtonQuit is a menu bar application that:
+### Purpose
 
-1. Runs quietly in the background
-2. Monitors window close events system-wide via the macOS Accessibility API
-3. When the last window of an application is closed (via red button click), automatically sends a quit command to that application
-4. Provides user control over which applications this behavior applies to
+RedButtonQuit is a macOS utility application that modifies the default window-close behavior. When a user clicks the red close button (or presses Cmd+W) on a window, the application will quit the entire application instead of just closing the window. This mimics the behavior many users expect from other operating systems where closing the last window terminates the application.
 
-### Technical Approach
+### High-Level Architecture
 
-- **Accessibility API (AXUIElement):** Monitor `AXUIElementDestroyed` notifications and `kAXWindowRole` changes
-- **NSWorkspace Observation:** Track running applications and their window counts
-- **CGWindowList:** Enumerate windows to detect when an app's last window closes
-- **Menu Bar App:** Minimal UI footprint using SwiftUI with AppKit integration for the status item
+The application operates as a menu bar agent (LSUIElement) that:
 
----
+1. Runs persistently in the background with minimal resource footprint
+2. Monitors window events system-wide via the Accessibility API
+3. Intercepts window destruction events and determines appropriate action
+4. Terminates target applications when their windows are closed (per user configuration)
+5. Provides a preferences interface for customization
 
-## 4. Target Audience
+### Design Philosophy
 
-### Primary Users
-
-1. **Windows Converts:** Users who recently switched from Windows and find the macOS close button behavior unintuitive
-2. **Cross-Platform Users:** People who regularly switch between macOS and Windows and want consistent behavior
-3. **Minimalists:** Users who prefer a "clean" system with no background apps they didn't explicitly leave running
-
-### Secondary Users
-
-1. **Power Users:** Those who want fine-grained control over which apps auto-quit
-2. **Developers:** Who may want certain apps (terminals, IDEs) to persist while others quit
-
-### User Profile
-
-- Comfortable granting Accessibility permissions (understands the system prompt)
-- Willing to use non-App Store software
-- Values utility over aesthetics
-- Likely has tried similar tools or at least searched for solutions
+- **Lightweight**: Minimal memory and CPU usage; event-driven, not polling
+- **Non-intrusive**: Menu bar only, no Dock icon unless user preference
+- **Respectful**: Allows graceful application termination, never force-kills
+- **Configurable**: Users control which apps are affected and behavior modes
 
 ---
 
-## 5. Distribution Strategy
+## 2. System Requirements
 
-### Critical Constraint: Mac App Store Incompatibility
+### Minimum Requirements
 
-> **This application CANNOT be distributed through the Mac App Store.**
+| Requirement | Specification |
+|-------------|---------------|
+| **Operating System** | macOS 14.0 Sonoma or later |
+| **Recommended OS** | macOS 15.0 Sequoia or later |
+| **Architecture** | Apple Silicon (arm64) or Intel (x86_64) |
+| **Memory** | Negligible (< 50 MB typical) |
+| **Disk Space** | < 10 MB |
+| **Permissions** | Accessibility permission (mandatory) |
 
-#### Why Not?
+### Recommended Requirements
 
-The Mac App Store requires all applications to be **sandboxed** (App Sandbox entitlement). However, RedButtonQuit requires the **Accessibility API** to monitor and respond to window events across ALL applications on the system.
+| Requirement | Specification |
+|-------------|---------------|
+| **Operating System** | macOS 15.0 Sequoia or later |
+| **Architecture** | Apple Silicon (arm64) |
 
-The Accessibility API, by its nature, requires system-wide access to UI elements—this is fundamentally incompatible with sandboxing, which restricts apps to their own container.
+### Permission Requirements
 
-**There is no workaround.** This is not a technical limitation we can engineer around; it's a policy enforcement by Apple for App Store apps.
-
-#### Impact on Original Plans
-
-If App Store distribution was the intended path, this constraint requires a complete pivot of the distribution strategy. This affects:
-
-- **Discoverability:** No App Store search presence
-- **Trust:** Users must trust a non-App Store download
-- **Updates:** Must implement our own update mechanism
-- **Revenue:** No Apple payment processing (if monetizing)
-
-### Chosen Distribution Path: Direct Download + Homebrew
-
-#### Primary: Direct Website Download
-
-**Requirements:**
-- Apple Developer Program membership ($99/year)
-- Code signing with Developer ID certificate
-- Notarization via Apple's notary service
-- Stapling the notarization ticket to the app
-
-**User Experience:**
-1. Download `.dmg` from website
-2. Open DMG, drag to Applications
-3. On first launch, Gatekeeper verifies notarization
-4. User prompted to grant Accessibility permission
-5. App runs
-
-#### Secondary: Homebrew Cask
-
-```bash
-brew install --cask redbuttonquit
-```
-
-**Benefits:**
-- Familiar to technical users
-- Automatic updates via `brew upgrade`
-- Builds trust through community curation
-- No cost to distribute
-
-**Requirements:**
-- Submit formula to homebrew-cask repository
-- Host releases on GitHub with consistent versioning
-
-#### Tertiary: GitHub Releases
-
-- Source code available for inspection
-- Pre-built notarized binaries attached to releases
-- Appeals to security-conscious users who want to verify
-
-### Update Mechanism
-
-Since we cannot use App Store automatic updates, we must implement:
-
-- **Sparkle Framework:** Industry-standard update framework for macOS apps
-- Update feed hosted on GitHub releases or dedicated endpoint
-- User-configurable: automatic updates, check on launch, or manual only
+| Permission | Purpose | Required |
+|------------|---------|----------|
+| **Accessibility** | Monitor window events, detect button clicks | Mandatory |
+| **Automation** | AppleScript fallback for termination | Optional |
 
 ---
 
-## 6. Key Features
-
-### Core Features (MVP)
-
-| Feature | Description | Priority |
-|---------|-------------|----------|
-| Quit on Last Window Close | When user closes the last window of an app, quit the app | P0 |
-| Menu Bar Presence | Minimal menu bar icon for access and status | P0 |
-| Accessibility Permission Flow | Clear guidance for granting required permissions | P0 |
-| Global Enable/Disable | Quick toggle to disable the behavior entirely | P0 |
-| Exclusion List | Specify apps that should NOT auto-quit | P0 |
-| Login Item Support | Option to start at system boot | P0 |
-
-### Enhanced Features (v1.x)
-
-| Feature | Description | Priority |
-|---------|-------------|----------|
-| Inclusion List Mode | Inverse of exclusion: ONLY listed apps auto-quit | P1 |
-| Per-App Delay | Wait X seconds before quitting (in case of accidental close) | P1 |
-| Undo Quit | Brief grace period to undo an auto-quit | P1 |
-| Notification Option | Optional notification when an app is auto-quit | P2 |
-| Statistics | Track how many times the feature triggered | P2 |
-| Keyboard Shortcut | Quick toggle via global hotkey | P2 |
-
-### Non-Features (Explicitly Out of Scope)
-
-- **Modifying other apps' behavior permanently:** We observe and react; we don't patch apps
-- **Requiring SIP disabled:** Must work on stock macOS
-- **Universal quit (Cmd+Q replacement):** Only affects red button behavior
-- **Cross-platform:** macOS only, no iOS/iPadOS
-
----
-
-## 7. User Experience
-
-### First Launch Flow
+## 3. Architecture Diagram
 
 ```
-1. User opens RedButtonQuit.app
-   │
-2. Welcome Screen
-   ├── Brief explanation of what the app does
-   ├── Explanation that Accessibility permission is required
-   └── "Grant Permission" button
-   │
-3. System Accessibility prompt appears
-   ├── User opens System Settings > Privacy & Security > Accessibility
-   ├── Enables RedButtonQuit in the list
-   └── Returns to app
-   │
-4. Permission Confirmed Screen
-   ├── "You're all set!"
-   ├── Brief tutorial on menu bar icon
-   └── Option to enable "Start at Login"
-   │
-5. App minimizes to menu bar
-   └── Ready to work
++------------------------------------------------------------------+
+|                        RedButtonQuit                              |
++------------------------------------------------------------------+
+|                                                                  |
+|  +------------------------+    +---------------------------+     |
+|  |   Menu Bar Controller  |    |   Preferences Manager     |     |
+|  |   - Status item        |    |   - UserDefaults          |     |
+|  |   - Menu management    |    |   - App exclusion list    |     |
+|  |   - Quick toggles      |    |   - Behavior settings     |     |
+|  +----------+-------------+    +-------------+-------------+     |
+|             |                                |                   |
+|             v                                v                   |
+|  +----------------------------------------------------------+   |
+|  |                    App Coordinator                        |   |
+|  |    - Lifecycle management                                 |   |
+|  |    - Component orchestration                              |   |
+|  |    - Permission state management                          |   |
+|  +---------------------------+------------------------------+   |
+|                              |                                   |
+|          +-------------------+-------------------+                |
+|          |                                       |                |
+|          v                                       v                |
+|  +--------------------+              +------------------------+  |
+|  | Accessibility      |              | App Termination        |  |
+|  | Monitor            |              | Service                |  |
+|  | - AXObserver       |   triggers   | - NSRunningApplication |  |
+|  | - Event detection  |------------->| - Graceful termination |  |
+|  | - Window tracking  |              | - Exclusion checking   |  |
+|  +--------------------+              +------------------------+  |
+|          |                                       |                |
+|          v                                       v                |
++------------------------------------------------------------------+
+           |                                       |
+           v                                       v
++--------------------+                  +----------------------+
+|   macOS            |                  |   Target             |
+|   Accessibility    |                  |   Applications       |
+|   Framework        |                  |   (to be terminated) |
++--------------------+                  +----------------------+
 ```
 
-### Ongoing Usage
-
-**Menu Bar Icon:**
-- Click: Opens dropdown menu
-- Right-click: Same as click (no distinction)
-
-**Menu Bar Menu:**
-```
-┌─────────────────────────┐
-│ ✓ Enabled               │
-├─────────────────────────┤
-│   Excluded Apps...      │
-│   Preferences...        │
-├─────────────────────────┤
-│   About RedButtonQuit   │
-│   Check for Updates...  │
-├─────────────────────────┤
-│   Quit RedButtonQuit    │
-└─────────────────────────┘
-```
-
-### The Core Behavior (Invisible When Working)
-
-1. User clicks red close button on an app's window
-2. If it's the last window of that app:
-   - RedButtonQuit detects window closure
-   - Checks if app is in exclusion list
-   - If not excluded: sends quit command to the app
-   - App quits gracefully (can show "save changes" dialogs)
-3. User perceives: "Closing the window quit the app" (desired behavior)
-
-### Edge Cases Handled
-
-| Scenario | Behavior |
-|----------|----------|
-| App has multiple windows, close one | Nothing special—app remains running |
-| App is in exclusion list | Normal macOS behavior (window closes, app persists) |
-| App was hidden, user closes last visible window | Quit (hidden doesn't mean "in use") |
-| App is document-based with unsaved changes | App's own "save?" dialog appears normally |
-| User Cmd+Q quits app normally | No interference |
-| App crashes | No interference—we only act on clean window closure |
-
----
-
-## 8. Success Criteria
-
-### Functional Requirements
-
-| ID | Requirement | Verification Method |
-|----|-------------|---------------------|
-| F1 | App correctly identifies when last window closes | Automated testing + manual verification |
-| F2 | App quits target application within 500ms of window close | Timing measurement |
-| F3 | Excluded apps are never auto-quit | Regression testing |
-| F4 | App survives sleep/wake cycles | Manual testing |
-| F5 | App works on both Apple Silicon and Intel | Test on both architectures |
-| F6 | App works on macOS Sequoia (15.x) | Primary test platform |
-| F7 | Accessibility permission request flow is clear | User testing |
-
-### Non-Functional Requirements
-
-| ID | Requirement | Target |
-|----|-------------|--------|
-| NF1 | Memory usage | < 30 MB resident |
-| NF2 | CPU usage at idle | < 0.1% |
-| NF3 | CPU usage during event | < 1% spike |
-| NF4 | Startup time | < 1 second to menu bar |
-| NF5 | No UI lag introduced | 0ms added to window close |
-
-### User Acceptance Criteria
-
-- [ ] Windows convert users report the behavior "feels natural"
-- [ ] No false positives (apps quitting when they shouldn't)
-- [ ] Permission setup takes < 60 seconds for typical user
-- [ ] Update mechanism works seamlessly
-
----
-
-## 9. Risks and Mitigations
-
-### High Priority Risks
-
-#### Risk 1: Accessibility Permission Friction
-
-**Description:** Users may be unwilling to grant Accessibility permissions due to security concerns or may not understand the process.
-
-**Likelihood:** High
-**Impact:** High (app is useless without permission)
-
-**Mitigations:**
-- Crystal-clear explanation of WHY the permission is needed
-- Visual guide with screenshots of System Settings
-- Link to Apple's documentation on Accessibility permissions
-- Explanation that Accessibility permissions are auditable and revocable
-- Consider: helper tool that opens System Settings to correct pane
-
-#### Risk 2: macOS Updates Break Functionality
-
-**Description:** Apple may change Accessibility API behavior, window management, or security model in future macOS versions.
-
-**Likelihood:** Medium
-**Impact:** High (could break core functionality)
-
-**Mitigations:**
-- Test on macOS betas during Apple's preview period
-- Abstract Accessibility API usage to isolate changes
-- Monitor Apple developer forums and release notes
-- Build automated tests that catch behavioral changes
-- Maintain responsive update cadence
-
-#### Risk 3: Distribution Trust Issues
-
-**Description:** Users may not trust software downloaded outside the App Store.
-
-**Likelihood:** Medium
-**Impact:** Medium (reduces adoption)
-
-**Mitigations:**
-- Notarization (mandatory for Gatekeeper anyway)
-- Open source the application (builds trust)
-- Homebrew distribution (community vetted)
-- Clear privacy policy (we collect no data)
-- Code signing with verified Developer ID
-
-#### Risk 4: App-Specific Incompatibilities
-
-**Description:** Some applications may have unusual window management that causes false positives or failures.
-
-**Likelihood:** Medium
-**Impact:** Low (can be addressed per-app)
-
-**Mitigations:**
-- Pre-populate exclusion list with known problem apps
-- Make it trivial to add apps to exclusion list
-- Community-contributed exclusion list updates
-- Document known incompatible apps
-
-### Medium Priority Risks
-
-#### Risk 5: Performance Impact
-
-**Description:** Monitoring all window events could impact system performance.
-
-**Likelihood:** Low
-**Impact:** Medium
-
-**Mitigations:**
-- Event-driven architecture (no polling)
-- Minimal processing in event handlers
-- Profile and optimize during development
-- Set hard limits on memory/CPU usage
-
-#### Risk 6: Conflict with Similar Apps
-
-**Description:** Users may have RedQuits, Swift Quit, or similar installed, causing conflicts.
-
-**Likelihood:** Low
-**Impact:** Low
-
-**Mitigations:**
-- Detect other apps and warn user
-- Document that only one such app should run
-- Graceful handling of duplicate quit commands
-
-#### Risk 7: Login Item Path Registration (Known Issue)
-
-**Description:** When "Launch at Login" is enabled while running the app from a non-production location (e.g., Xcode's DerivedData debug build), the login item silently fails after macOS restart.
-
-**Likelihood:** High (for developers)
-**Impact:** Medium (app doesn't auto-start, but can be launched manually)
-
-**Root Cause:** `SMAppService.mainApp.register()` registers the login item using the current running app's bundle path. Ephemeral paths (DerivedData, Downloads) may not exist or may have different code signatures after restart.
-
-**Discovered:** 2026-01-01
-
-**Mitigations:**
-- Document that app must be installed to `/Applications` before enabling Launch at Login
-- Add runtime detection of non-production paths with user warning (planned)
-- Provide clear troubleshooting steps in README and FAQ
-
----
-
-## 10. Prior Art & Differentiation
-
-### Competitive Landscape
-
-#### RedQuits (by Carsten Mielke)
-
-**Status:** Legacy, Intel-only
-**Approach:** Accessibility API
-**Limitations:**
-- Not updated for Apple Silicon (runs via Rosetta)
-- No native ARM build
-- Minimal UI/configuration options
-- Unclear maintenance status
-
-**Our Differentiation:**
-- Native Universal Binary (Apple Silicon + Intel)
-- Modern SwiftUI interface
-- Active maintenance commitment
-- Enhanced configuration options
-
-#### Swift Quit
-
-**Status:** Active, Modern
-**Approach:** Accessibility API
-**Features:**
-- Configurable app lists
-- Modern UI
-- Active development
-
-**Our Differentiation:**
-- Fully open source (trust through transparency)
-- Homebrew distribution
-- Focus on simplicity (Swift Quit may have feature bloat)
-- Potentially different UX philosophy
-
-#### Goodbye (SIMBL-based)
-
-**Status:** Obsolete/Broken
-**Approach:** Code injection via SIMBL framework
-**Limitations:**
-- Requires disabling System Integrity Protection (SIP)
-- Breaks with every macOS update
-- Security nightmare
-- Effectively dead
-
-**Our Differentiation:**
-- Works with SIP enabled (100% stock macOS)
-- Uses supported APIs only
-- No code injection
-
-### Our Unique Positioning
-
-1. **Open Source:** Full transparency, community contributions welcome
-2. **Modern Stack:** Swift 5.9+, SwiftUI, targeting current macOS
-3. **Universal Binary:** Native on all Macs
-4. **Minimal Footprint:** No resource bloat
-5. **Simple Distribution:** Homebrew and direct download
-6. **Privacy First:** No analytics, no network calls except updates
-
----
-
-## 11. Technical Architecture Overview
-
-### Component Diagram
+### Component Relationships
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      RedButtonQuit                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐  │
-│  │   Menu Bar   │    │  Preferences │    │   Onboarding │  │
-│  │     View     │    │    Window    │    │     Flow     │  │
-│  │  (SwiftUI)   │    │  (SwiftUI)   │    │  (SwiftUI)   │  │
-│  └──────┬───────┘    └──────┬───────┘    └──────────────┘  │
-│         │                   │                               │
-│  ┌──────┴───────────────────┴───────┐                       │
-│  │         App Coordinator          │                       │
-│  │    (State Management, Logic)     │                       │
-│  └──────────────┬───────────────────┘                       │
-│                 │                                           │
-│  ┌──────────────┴───────────────────┐                       │
-│  │      Window Observer Service     │◄──── Accessibility    │
-│  │  (AXObserver, CGWindowList)      │      API Events       │
-│  └──────────────┬───────────────────┘                       │
-│                 │                                           │
-│  ┌──────────────┴───────────────────┐                       │
-│  │      App Lifecycle Service       │                       │
-│  │  (NSWorkspace, quit commands)    │                       │
-│  └──────────────────────────────────┘                       │
-│                                                             │
-│  ┌────────────────┐  ┌─────────────────┐                    │
-│  │  Exclusions    │  │   Preferences   │                    │
-│  │   Storage      │  │    Storage      │                    │
-│  │  (UserDefaults)│  │  (UserDefaults) │                    │
-│  └────────────────┘  └─────────────────┘                    │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+User Action (clicks red button)
+         |
+         v
++------------------+
+| macOS sends      |
+| AX notification  |
++--------+---------+
+         |
+         v
++------------------+
+| Accessibility    |
+| Monitor receives |
+| notification     |
++--------+---------+
+         |
+         v
++------------------+
+| Window Event     |
+| Handler analyzes |
+| - Is last window?|
+| - Is app excluded|
++--------+---------+
+         |
+    +----+----+
+    |         |
+    v         v
+  [Skip]   [Terminate]
+              |
+              v
++------------------+
+| App Termination  |
+| Service sends    |
+| terminate signal |
++------------------+
 ```
 
-### Technology Choices
-
-| Component | Technology | Rationale |
-|-----------|------------|-----------|
-| UI Framework | SwiftUI | Modern, declarative, less code |
-| Menu Bar | AppKit NSStatusItem + SwiftUI | SwiftUI alone can't do menu bar |
-| Accessibility | AXUIElement APIs | Only way to observe window events |
-| Window Enumeration | CGWindowListCopyWindowInfo | Fast, reliable |
-| App Lifecycle | NSWorkspace + NSRunningApplication | Standard approach |
-| Storage | UserDefaults | Simple, sufficient for preferences |
-| Updates | Sparkle | Industry standard |
-| Distribution | Notarized .dmg + Homebrew | Best reach without App Store |
-
 ---
 
-## 12. Development Phases
+## 4. Core Components
 
-### Phase 1: Foundation (Week 1-2)
+### 4.1 Accessibility Monitor
 
-- [ ] Project setup with Swift Package Manager
-- [ ] Menu bar app skeleton
-- [ ] Accessibility permission detection and request flow
-- [ ] Basic window observation (proof of concept)
+**Purpose**: Observes system-wide window events using the macOS Accessibility API.
 
-### Phase 2: Core Functionality (Week 3-4)
+**Responsibilities**:
+- Create and manage AXObserver instances for running applications
+- Register for relevant accessibility notifications
+- Track window creation and destruction events
+- Maintain a map of applications to their window counts
+- Handle observer lifecycle (creation, invalidation, cleanup)
 
-- [ ] Window close detection for all apps
-- [ ] "Last window" detection logic
-- [ ] Quit command dispatch
-- [ ] Basic exclusion list (hardcoded)
+**Key Technical Details**:
+- Uses `AXObserverCreate` to create observers for each monitored application
+- Registers for `kAXWindowCreatedNotification` and `kAXUIElementDestroyedNotification`
+- Adds observers to the main run loop via `CFRunLoopAddSource`
+- Must handle cases where applications launch/quit dynamically
 
-### Phase 3: User Experience (Week 5-6)
+**Observer Registration Strategy**:
+- Option A: Global observer on system-wide element (limited notification types)
+- Option B: Per-application observers (more reliable, higher overhead)
+- Recommendation: Per-application observers for active applications only
 
-- [ ] Preferences window (exclusion list management)
-- [ ] Onboarding flow
-- [ ] Login item support
-- [ ] Settings persistence
+**Window Tracking**:
+- Query window list via `kAXWindowsAttribute` on application AXUIElement
+- Track window count changes to detect "last window" scenarios
+- Handle edge cases: sheets, panels, popovers (should not trigger quit)
 
-### Phase 4: Polish & Distribution (Week 7-8)
+### 4.2 Window Event Handler
 
-- [ ] Sparkle integration for updates
-- [ ] Code signing and notarization pipeline
-- [ ] DMG creation automation
-- [ ] Homebrew cask formula
-- [ ] Documentation and website
+**Purpose**: Processes accessibility notifications and determines appropriate action.
 
-### Phase 5: Launch & Iterate
+**Responsibilities**:
+- Receive notifications from Accessibility Monitor
+- Determine if the closed element was a standard window (not sheet/panel)
+- Check if the window was the last window of the application
+- Consult Preferences Manager for user settings
+- Dispatch termination request to App Termination Service
 
-- [ ] Public release
-- [ ] Monitor for compatibility issues
-- [ ] Respond to user feedback
-- [ ] Plan v1.1 features
+**Decision Logic**:
 
----
+```
+on WindowClosed(app, window):
+    if app in exclusionList:
+        return NO_ACTION
 
-## 13. Open Questions
+    if mode == QUIT_ON_ANY_CLOSE:
+        return TERMINATE_APP
 
-1. **Monetization:** Free? Paid? Donation-ware? (Affects effort investment)
-2. **Open Source License:** MIT? GPL? Apache 2.0? (Affects contribution model)
-3. **App Name:** "RedButtonQuit" vs alternatives (trademark search needed)
-4. **Website:** Need a landing page for direct download?
-5. **Support:** GitHub Issues sufficient, or need email support?
-
----
-
-## 14. Appendix: Accessibility API Reference
-
-### Key APIs Used
-
-```swift
-// Observing window events
-AXObserverCreate(pid, callback, &observer)
-AXObserverAddNotification(observer, element, kAXUIElementDestroyedNotification, nil)
-
-// Getting window list
-CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID)
-
-// Checking running apps
-NSWorkspace.shared.runningApplications
-
-// Quitting an app
-app.terminate() // Graceful
-// or
-NSRunningApplication(processIdentifier: pid)?.terminate()
+    if mode == QUIT_ON_LAST_WINDOW:
+        remainingWindows = getWindowCount(app)
+        if remainingWindows == 0:
+            return TERMINATE_APP
+        else:
+            return NO_ACTION
 ```
 
-### Required Entitlements
+**Window Type Detection**:
+- Standard windows: `kAXStandardWindowSubrole`
+- Dialogs/Sheets: Should NOT trigger quit (query `kAXRoleAttribute`)
+- Floating panels: Should NOT trigger quit
+- Full-screen windows: Require special handling
 
-```xml
-<!-- Info.plist -->
-<key>NSAccessibilityUsageDescription</key>
-<string>RedButtonQuit needs Accessibility access to detect when you close application windows, so it can automatically quit apps when their last window is closed.</string>
+### 4.3 App Termination Service
+
+**Purpose**: Handles graceful application termination with fallback strategies.
+
+**Responsibilities**:
+- Receive termination requests from Window Event Handler
+- Verify application is still running and not in exclusion list
+- Attempt graceful termination via `NSRunningApplication.terminate()`
+- Implement fallback termination via AppleScript if primary fails
+- Handle termination failures gracefully
+
+**Termination Hierarchy**:
+
+1. **Primary Method**: `NSRunningApplication.terminate()`
+   - Sends `NSApplicationTerminateReply` to target app
+   - Allows app to show save dialogs, perform cleanup
+   - Non-blocking, returns immediately
+
+2. **Secondary Method** (if primary fails): AppleScript
+   - `tell application "AppName" to quit`
+   - Requires Automation permission
+   - More reliable for some applications
+
+3. **Never Used**: `forceTerminate()` / SIGKILL
+   - Could cause data loss
+   - Only expose as explicit user action (never automatic)
+
+**System App Protection**:
+- Maintain hardcoded list of protected bundle identifiers
+- Finder: `com.apple.finder`
+- System Settings: `com.apple.systempreferences`
+- Dock: `com.apple.dock`
+- Others as identified during testing
+
+### 4.4 Preferences Manager
+
+**Purpose**: Manages user preferences and application configuration.
+
+**Responsibilities**:
+- Store/retrieve preferences using UserDefaults
+- Manage app exclusion list (apps that should never be quit)
+- Manage app inclusion list (if using opt-in mode)
+- Handle mode selection (quit on any vs quit on last)
+- Provide reactive updates to other components
+
+**Settings Schema**:
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `isEnabled` | Bool | true | Global enable/disable |
+| `quitMode` | Enum | lastWindow | When to trigger quit |
+| `excludedBundleIDs` | [String] | [system apps] | Apps to never quit |
+| `launchAtLogin` | Bool | false | Start on login |
+| `showInDock` | Bool | false | Show Dock icon |
+| `showMenuBarIcon` | Bool | true | Show menu bar icon |
+| `playSound` | Bool | false | Audio feedback |
+
+**Quit Modes**:
+- `lastWindow`: Only quit when the last window is closed
+- `anyWindow`: Quit whenever any window is closed (aggressive)
+- `disabled`: Temporarily disable functionality
+
+### 4.5 Menu Bar Controller
+
+**Purpose**: Provides user interface via the macOS menu bar.
+
+**Responsibilities**:
+- Display status item in menu bar
+- Show current enabled/disabled state
+- Provide quick toggles for enable/disable
+- Open preferences window
+- Show "About" information
+- Provide "Quit RedButtonQuit" option
+
+**Menu Structure**:
+
+```
+[Icon] RedButtonQuit
+├── Enabled                    [checkbox]
+├── ─────────────
+├── Quit Mode                  [submenu]
+│   ├── On Last Window Close   [radio]
+│   └── On Any Window Close    [radio]
+├── ─────────────
+├── Excluded Apps...           [opens preferences]
+├── ─────────────
+├── Launch at Login            [checkbox]
+├── Preferences...             [opens full preferences]
+├── ─────────────
+├── About RedButtonQuit
+└── Quit RedButtonQuit
 ```
 
-**Note:** Cannot use App Sandbox entitlement—mutually exclusive with Accessibility system-wide access.
+**Visual States**:
+- Enabled: Normal icon appearance
+- Disabled: Dimmed/slashed icon
+- No Accessibility Permission: Warning badge
 
 ---
 
-*Document prepared for RedButtonQuit project planning. This is a living document and will be updated as decisions are made and implementation progresses.*
+## 5. Key APIs and Frameworks
+
+### Core Frameworks
+
+| Framework | Purpose | Import |
+|-----------|---------|--------|
+| **ApplicationServices** | Accessibility API (AXUIElement) | `import ApplicationServices` |
+| **AppKit** | NSRunningApplication, NSStatusBar | `import AppKit` |
+| **SwiftUI** | Preferences UI (macOS 14+) | `import SwiftUI` |
+| **ServiceManagement** | Launch at login | `import ServiceManagement` |
+| **Combine** | Reactive preferences updates | `import Combine` |
+
+### Accessibility API Elements
+
+| API | Purpose |
+|-----|---------|
+| `AXIsProcessTrusted()` | Check if app has accessibility permission |
+| `AXUIElementCreateApplication()` | Create element reference for an app |
+| `AXUIElementCreateSystemWide()` | Create system-wide element |
+| `AXObserverCreate()` | Create notification observer |
+| `AXObserverAddNotification()` | Register for specific notifications |
+| `AXObserverGetRunLoopSource()` | Get run loop source for observer |
+| `AXUIElementCopyAttributeValue()` | Query element attributes |
+| `kAXWindowsAttribute` | Get list of windows |
+| `kAXRoleAttribute` | Get element role |
+| `kAXSubroleAttribute` | Get element subrole |
+
+### Relevant Notifications
+
+| Notification | When Fired |
+|--------------|------------|
+| `kAXWindowCreatedNotification` | New window opened |
+| `kAXUIElementDestroyedNotification` | UI element destroyed |
+| `kAXFocusedWindowChangedNotification` | Focus changed |
+| `kAXApplicationActivatedNotification` | App became active |
+| `kAXApplicationDeactivatedNotification` | App became inactive |
+
+### Application Lifecycle APIs
+
+| API | Purpose |
+|-----|---------|
+| `NSWorkspace.shared.runningApplications` | List running apps |
+| `NSRunningApplication.terminate()` | Request app termination |
+| `NSWorkspace.didLaunchApplicationNotification` | App launched |
+| `NSWorkspace.didTerminateApplicationNotification` | App terminated |
+
+### ServiceManagement (Launch at Login)
+
+| API | Purpose |
+|-----|---------|
+| `SMAppService.mainApp` | Reference to current app service |
+| `SMAppService.status` | Current registration status |
+| `SMAppService.register()` | Enable launch at login |
+| `SMAppService.unregister()` | Disable launch at login |
+
+#### Critical: Login Item Path Registration
+
+**Important Behavior**: When `SMAppService.mainApp.register()` is called, macOS registers the login item using the **current running app's bundle path**. This has significant implications:
+
+| Scenario | Path Registered | Result on Restart |
+|----------|-----------------|-------------------|
+| Running from `/Applications/RedButtonQuit.app` | `/Applications/RedButtonQuit.app` | ✅ Works correctly |
+| Running from Xcode DerivedData (debug build) | `/Users/.../DerivedData/.../Debug/RedButtonQuit.app` | ❌ Fails - path may not exist or signature mismatch |
+| Running from `~/Downloads/RedButtonQuit.app` | `~/Downloads/RedButtonQuit.app` | ⚠️ May work but not recommended |
+
+**Known Issue (Documented 2026-01-01)**: If a user enables "Launch at Login" while running the app from Xcode's debug build, the login item will fail after macOS restart because:
+
+1. The DerivedData path is ephemeral (Xcode may clean it)
+2. Rebuilding the app changes the code signature
+3. macOS may block apps launching from non-standard locations
+
+**Recommended Fix for Users**:
+1. Install the app to `/Applications` before enabling "Launch at Login"
+2. If login item fails, disable and re-enable from the properly installed app
+
+**Future Enhancement**: Add runtime validation in `PreferencesManager.updateLoginItem()` to detect and warn when app is running from a non-production location.
+
+---
+
+## 6. Data Flow
+
+### Startup Flow
+
+```
+1. App launches
+   |
+   v
+2. Check accessibility permission (AXIsProcessTrusted)
+   |
+   +---> Not granted: Show onboarding UI
+   |                  Guide user to System Settings
+   |                  Poll for permission grant
+   |
+   +---> Granted: Continue
+   |
+   v
+3. Load preferences from UserDefaults
+   |
+   v
+4. Initialize Menu Bar Controller
+   |
+   v
+5. Subscribe to NSWorkspace notifications
+   |
+   v
+6. For each running application:
+   |
+   +---> Create AXUIElement reference
+   |
+   +---> Create AXObserver
+   |
+   +---> Register for window notifications
+   |
+   +---> Add observer to run loop
+   |
+   v
+7. Enter main run loop (app is now active)
+```
+
+### Runtime Event Flow
+
+```
+1. User clicks red button on target app window
+   |
+   v
+2. macOS closes the window
+   |
+   v
+3. macOS sends kAXUIElementDestroyedNotification
+   |
+   v
+4. AXObserver callback fires in RedButtonQuit
+   |
+   v
+5. Accessibility Monitor passes event to Window Event Handler
+   |
+   v
+6. Window Event Handler:
+   a. Identifies source application (bundle ID, PID)
+   b. Checks if app is in exclusion list --> [Skip if excluded]
+   c. Checks quit mode setting
+   d. If QUIT_ON_LAST_WINDOW:
+      - Query remaining window count
+      - Skip if windows remain
+   |
+   v
+7. App Termination Service:
+   a. Verify app still running
+   b. Call NSRunningApplication.terminate()
+   c. Handle failure with AppleScript fallback
+   |
+   v
+8. Target application receives terminate signal
+   |
+   v
+9. Target application quits (may show save dialogs)
+```
+
+### Preferences Change Flow
+
+```
+1. User modifies setting in Preferences UI
+   |
+   v
+2. SwiftUI @AppStorage updates UserDefaults
+   |
+   v
+3. Combine publisher emits new value
+   |
+   v
+4. Subscribers receive update:
+   - Menu Bar Controller updates state
+   - Accessibility Monitor adjusts behavior
+   - App Termination Service updates exclusion cache
+```
+
+---
+
+## 7. Permission Model
+
+### Accessibility Permission
+
+**Why Required**:
+The Accessibility API is the only official way to monitor window events across applications on macOS. Without this permission, the app cannot:
+- Observe when windows open or close
+- Determine which application owns a window
+- Count remaining windows for an application
+
+**User Experience Flow**:
+
+```
+1. First Launch
+   |
+   v
+2. App checks AXIsProcessTrusted()
+   |
+   +---> Returns false (not trusted)
+   |
+   v
+3. Display onboarding window explaining:
+   - What the app does
+   - Why accessibility permission is needed
+   - That the app cannot function without it
+   - Privacy assurance (no data collection)
+   |
+   v
+4. User clicks "Open System Settings"
+   |
+   v
+5. App opens: System Settings > Privacy & Security > Accessibility
+   (using URL: x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility)
+   |
+   v
+6. App enters permission polling loop:
+   - Check AXIsProcessTrusted() every 1 second
+   - Show "Waiting for permission..." indicator
+   |
+   v
+7. User toggles switch for RedButtonQuit
+   |
+   v
+8. AXIsProcessTrusted() returns true
+   |
+   v
+9. Onboarding dismisses, app activates full functionality
+```
+
+**Permission Revocation Handling**:
+- App should periodically verify permission (every 30 seconds)
+- If revoked: Disable functionality, show notification, guide to re-enable
+- Never crash or behave unexpectedly if permission is revoked
+
+### Automation Permission (Optional)
+
+**Purpose**: Fallback termination via AppleScript
+
+**Acquisition**: Prompted automatically on first AppleScript execution
+
+**If Denied**: Primary termination method still works; fallback unavailable
+
+---
+
+## 8. Configuration Storage
+
+### Storage Mechanism
+
+**Primary**: `UserDefaults.standard` with app-specific suite
+
+**Sync**: NOT using iCloud sync (local-only preferences)
+
+### Data Schema
+
+```
+UserDefaults Keys:
+├── com.redbutton.quit.isEnabled          : Bool
+├── com.redbutton.quit.quitMode           : String (enum raw value)
+├── com.redbutton.quit.excludedBundleIDs  : [String]
+├── com.redbutton.quit.launchAtLogin      : Bool
+├── com.redbutton.quit.showInDock         : Bool
+├── com.redbutton.quit.showMenuBarIcon    : Bool
+├── com.redbutton.quit.playSound          : Bool
+└── com.redbutton.quit.hasCompletedOnboarding : Bool
+```
+
+### Default Values
+
+```
+isEnabled: true
+quitMode: "lastWindow"
+excludedBundleIDs: [
+    "com.apple.finder",
+    "com.apple.systempreferences",
+    "com.apple.ActivityMonitor"
+]
+launchAtLogin: false
+showInDock: false
+showMenuBarIcon: true
+playSound: false
+hasCompletedOnboarding: false
+```
+
+### Migration Strategy
+
+If schema changes between versions:
+1. Check for version key in UserDefaults
+2. If missing or older, run migration
+3. Update version key after migration
+
+---
+
+## 9. Build and Distribution
+
+### Xcode Project Configuration
+
+**Project Structure**:
+```
+RedButtonQuit/
+├── RedButtonQuit.xcodeproj
+├── RedButtonQuit/
+│   ├── App/
+│   │   ├── RedButtonQuitApp.swift
+│   │   └── AppDelegate.swift
+│   ├── Core/
+│   │   ├── AccessibilityMonitor.swift
+│   │   ├── WindowEventHandler.swift
+│   │   ├── AppTerminationService.swift
+│   │   └── PreferencesManager.swift
+│   ├── UI/
+│   │   ├── MenuBarController.swift
+│   │   ├── PreferencesView.swift
+│   │   └── OnboardingView.swift
+│   ├── Resources/
+│   │   ├── Assets.xcassets
+│   │   └── Localizable.strings
+│   └── Supporting/
+│       ├── Info.plist
+│       └── RedButtonQuit.entitlements
+└── RedButtonQuitTests/
+```
+
+**Build Settings**:
+
+| Setting | Value |
+|---------|-------|
+| Deployment Target | macOS 14.0 |
+| Swift Language Version | Swift 5.9+ |
+| Architectures | $(ARCHS_STANDARD) (arm64, x86_64) |
+| Build Active Architecture Only | No (Release) |
+
+**Info.plist Configuration**:
+
+| Key | Value | Purpose |
+|-----|-------|---------|
+| `LSUIElement` | YES | Menu bar app, no Dock icon |
+| `NSAccessibilityUsageDescription` | [Explanation text] | Accessibility permission prompt |
+| `LSApplicationCategoryType` | public.app-category.utilities | App Store category |
+| `CFBundleVersion` | Build number | Build identifier |
+| `CFBundleShortVersionString` | Semantic version | User-facing version |
+
+### Signing Requirements
+
+**Development**:
+- Personal Team or Apple Developer account
+- Automatic signing for development
+
+**Distribution**:
+- Apple Developer Program membership required
+- Developer ID Application certificate
+- Developer ID Installer certificate (for PKG distribution)
+
+### Entitlements
+
+**RedButtonQuit.entitlements**:
+
+| Entitlement | Value | Purpose |
+|-------------|-------|---------|
+| `com.apple.security.app-sandbox` | NO | Accessibility API requires no sandbox |
+| `com.apple.security.hardened-runtime` | YES | Required for notarization |
+| `com.apple.security.automation.apple-events` | YES | AppleScript fallback |
+
+**Critical**: App Sandbox MUST be disabled. This prevents Mac App Store distribution.
+
+### Notarization Process
+
+1. **Archive**: Product > Archive in Xcode
+2. **Export**: Distribute App > Developer ID > Upload (or Export Notarized App)
+3. **Automatic Notarization**: Xcode submits to Apple's notarization service
+4. **Stapling**: Xcode staples ticket to app after approval
+5. **Result**: App can be distributed and will pass Gatekeeper
+
+**Command Line Alternative**:
+```
+# Submit for notarization
+xcrun notarytool submit RedButtonQuit.zip --apple-id <email> --team-id <team> --password <app-specific-password>
+
+# Check status
+xcrun notarytool info <submission-id> --apple-id <email> --team-id <team> --password <password>
+
+# Staple ticket
+xcrun stapler staple RedButtonQuit.app
+```
+
+### Distribution Channels
+
+| Channel | Format | Notes |
+|---------|--------|-------|
+| **Direct Download** | DMG or ZIP | Website distribution |
+| **Homebrew Cask** | Cask formula | `brew install --cask redbuttonquit` |
+| **GitHub Releases** | ZIP + DMG | Open source distribution |
+| **Mac App Store** | NOT POSSIBLE | Requires sandbox, which we cannot use |
+
+**DMG Creation**:
+- Include app bundle
+- Include symbolic link to /Applications
+- Optional: Custom background image
+- Tool: `create-dmg` or `hdiutil`
+
+---
+
+## 10. Testing Strategy
+
+### Unit Testing
+
+**Testable Components**:
+- PreferencesManager: UserDefaults read/write
+- Exclusion list logic
+- Quit mode decision logic
+
+**Mocking Strategy**:
+- Protocol-based dependency injection
+- Mock NSRunningApplication for termination tests
+- Mock AXUIElement responses
+
+### Integration Testing
+
+**Test Scenarios**:
+
+| Scenario | Steps | Expected Result |
+|----------|-------|-----------------|
+| Basic quit on close | Open TextEdit, close window | TextEdit quits |
+| Exclusion list | Add Finder to exclusions, close Finder window | Finder stays open |
+| Last window mode | Open 2 windows, close 1 | App stays open |
+| Last window mode | Open 2 windows, close both | App quits after 2nd |
+| System app protection | Close Finder window | Finder never quits |
+| Permission revoked | Revoke accessibility permission | App shows warning, disables |
+
+### Manual Testing Checklist
+
+- [ ] Fresh install on clean macOS
+- [ ] Accessibility permission flow
+- [ ] Menu bar icon appears
+- [ ] Enable/disable toggle works
+- [ ] Preferences window opens
+- [ ] Exclusion list add/remove
+- [ ] Quit mode switching
+- [ ] Launch at login toggle
+- [ ] App survives sleep/wake
+- [ ] App survives fast user switching
+- [ ] Multiple displays
+- [ ] Mission Control / Spaces
+- [ ] Full-screen apps
+
+### Accessibility Testing
+
+- VoiceOver compatibility for preferences UI
+- Keyboard navigation in preferences
+- Sufficient contrast in menu bar icon
+
+### Performance Testing
+
+- Memory usage over 24 hours
+- CPU usage while idle
+- CPU usage during rapid window open/close
+- Observer cleanup (no memory leaks)
+
+---
+
+## 11. Security Considerations
+
+### Hardened Runtime
+
+Required for notarization. Restricts:
+- JIT compilation
+- Unsigned executable memory
+- DYLD environment variables
+- Library validation
+
+**Exceptions Needed**:
+- `com.apple.security.automation.apple-events` for AppleScript
+
+### Privacy
+
+**Data Collection**: None
+
+**Network Access**: None required (app is offline-capable)
+
+**Sensitive Access**:
+- Accessibility API observes window titles (required for function)
+- No data is stored, transmitted, or logged
+
+### Code Signing
+
+- All code must be signed with Developer ID
+- Notarization verifies no malware
+- Gatekeeper validates on first launch
+
+### Attack Surface
+
+| Vector | Mitigation |
+|--------|------------|
+| Malicious accessibility observer | Only monitors, never modifies |
+| Termination of wrong app | Exclusion list, confirmation option |
+| Privilege escalation | App runs as user, no elevated privileges |
+
+---
+
+## 12. Performance Considerations
+
+### Resource Targets
+
+| Metric | Target | Maximum |
+|--------|--------|---------|
+| Memory (idle) | < 30 MB | 50 MB |
+| Memory (active) | < 40 MB | 75 MB |
+| CPU (idle) | < 0.1% | 0.5% |
+| CPU (event processing) | < 1% | 5% |
+| Disk I/O | Minimal | Preferences only |
+
+### Optimization Strategies
+
+**Event-Driven Architecture**:
+- No polling loops
+- All work triggered by system notifications
+- Run loop integration for efficient waiting
+
+**Observer Management**:
+- Only create observers for running applications
+- Remove observers when applications quit
+- Lazy observer creation (only when app becomes active)
+
+**Memory Management**:
+- Use weak references where appropriate
+- Clean up AXUIElement references promptly
+- Avoid retaining application references unnecessarily
+
+**Efficient Data Structures**:
+- Use Set<String> for exclusion list (O(1) lookup)
+- Cache bundle ID to PID mappings
+- Avoid repeated Accessibility API queries
+
+### Battery Impact
+
+- Minimal: Event-driven, no polling
+- No background network activity
+- No timers except permission polling (only when permission missing)
+
+---
+
+## 13. Compatibility
+
+### macOS Version Support
+
+| macOS Version | Support Level | Notes |
+|---------------|---------------|-------|
+| macOS 15 Sequoia | Full | Primary target |
+| macOS 14 Sonoma | Full | Minimum requirement |
+| macOS 13 Ventura | Untested | May work, not guaranteed |
+| macOS 12 and earlier | Not Supported | Use older Accessibility APIs |
+
+### Architecture Support
+
+| Architecture | Support |
+|--------------|---------|
+| Apple Silicon (arm64) | Full, native |
+| Intel (x86_64) | Full, native |
+| Rosetta 2 | Works, but native preferred |
+
+**Universal Binary**: Single app bundle contains both architectures.
+
+### Application Compatibility
+
+**Tested Compatible**:
+- Standard AppKit applications
+- Standard SwiftUI applications
+- Electron apps (Chrome, VS Code, Slack)
+- Catalyst apps
+
+**Known Issues**:
+- Some games: May not fire accessibility events properly
+- Some virtualization apps: Complex window hierarchies
+- JetBrains IDEs: Multiple window types require careful handling
+
+---
+
+## 14. Dependencies
+
+### External Dependencies
+
+**None**. The application uses only Apple system frameworks.
+
+### Framework Dependencies (Apple-provided)
+
+| Framework | Availability | Required |
+|-----------|--------------|----------|
+| Foundation | macOS 10.0+ | Yes |
+| AppKit | macOS 10.0+ | Yes |
+| ApplicationServices | macOS 10.0+ | Yes |
+| SwiftUI | macOS 10.15+ | Yes |
+| Combine | macOS 10.15+ | Yes |
+| ServiceManagement | macOS 10.6+ | Yes |
+
+### Why No External Dependencies?
+
+- Simpler distribution (no dependency management)
+- Smaller app size
+- No supply chain security concerns
+- Apple frameworks are stable and well-documented
+- All required functionality available in system frameworks
+
+---
+
+## 15. Known Limitations
+
+### Technical Limitations
+
+| Limitation | Reason | Workaround |
+|------------|--------|------------|
+| Cannot distribute via Mac App Store | Requires disabled sandbox | Direct distribution, Homebrew |
+| Requires manual permission grant | macOS security model | Clear onboarding UX |
+| Cannot intercept close before it happens | AX notifications are post-event | Accept default close, then terminate |
+| May miss rapid window events | Observer callback timing | Acceptable trade-off |
+| Cannot quit system apps | Hardcoded protection | By design |
+
+### Behavioral Limitations
+
+| Limitation | Description |
+|------------|-------------|
+| Save dialogs still appear | App terminates gracefully, so save prompts show |
+| Unsaved changes may be lost | If user dismisses save dialog, data lost |
+| Multi-window apps may lose state | Closing one window quits app |
+| Background-only apps unaffected | No windows to close |
+
+### User Experience Limitations
+
+| Limitation | Mitigation |
+|------------|------------|
+| Learning curve | Clear onboarding, documentation |
+| Different from default macOS | User chose to install, explicit opt-in |
+| Can quit apps accidentally | Exclusion list, confirmation option |
+
+### Platform Limitations
+
+| Limitation | Description |
+|------------|-------------|
+| macOS only | No iOS/iPadOS (different window model) |
+| No remote management | Per-user installation only |
+| Accessibility permission required | Cannot be deployed silently via MDM |
+
+---
+
+## Appendix A: Glossary
+
+| Term | Definition |
+|------|------------|
+| **AXUIElement** | Accessibility UI element reference type |
+| **AXObserver** | Object that receives accessibility notifications |
+| **Bundle ID** | Unique reverse-DNS identifier for an app (e.g., com.apple.finder) |
+| **Hardened Runtime** | macOS security feature restricting certain capabilities |
+| **LSUIElement** | Info.plist key making app a background agent |
+| **Notarization** | Apple's automated malware scanning for distribution |
+| **PID** | Process identifier, unique numeric ID for running process |
+| **SMAppService** | ServiceManagement API for login items |
+
+---
+
+## Appendix B: Reference Documents
+
+- [Apple Accessibility Programming Guide](https://developer.apple.com/documentation/accessibility)
+- [AXUIElement Reference](https://developer.apple.com/documentation/applicationservices/axuielement)
+- [NSRunningApplication Documentation](https://developer.apple.com/documentation/appkit/nsrunningapplication)
+- [ServiceManagement Framework](https://developer.apple.com/documentation/servicemanagement)
+- [Notarizing macOS Software](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution)
+- [Hardened Runtime Entitlements](https://developer.apple.com/documentation/security/hardened_runtime)
+
+---
+
+*Document Version: 1.0*
+*Last Updated: December 2025*
