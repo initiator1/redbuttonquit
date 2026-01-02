@@ -131,6 +131,20 @@ Most apps work correctly. Some apps with unusual window management (certain game
 2. Delete RedButtonQuit.app from Applications
 3. (Optional) Remove preferences: `defaults delete com.redbuttonquit.app`
 
+### "Launch at Login" stopped working after restart
+
+This happens when the app was running from a non-standard location (like Xcode's debug build) when you enabled the feature.
+
+**To fix:**
+1. Make sure RedButtonQuit is installed in `/Applications`
+2. Reset the login item preference:
+   ```bash
+   defaults delete com.redbuttonquit.app com.redbuttonquit.launchAtLogin
+   ```
+3. Launch the app from `/Applications` and re-enable "Launch at Login"
+
+**For developers:** Always install the release build to `/Applications` before testing Login at Launch functionality.
+
 ## Contributing
 
 Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.

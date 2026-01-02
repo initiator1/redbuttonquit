@@ -368,6 +368,22 @@ Since we cannot use App Store automatic updates, we must implement:
 - Document that only one such app should run
 - Graceful handling of duplicate quit commands
 
+#### Risk 7: Login Item Path Registration (Known Issue)
+
+**Description:** When "Launch at Login" is enabled while running the app from a non-production location (e.g., Xcode's DerivedData debug build), the login item silently fails after macOS restart.
+
+**Likelihood:** High (for developers)
+**Impact:** Medium (app doesn't auto-start, but can be launched manually)
+
+**Root Cause:** `SMAppService.mainApp.register()` registers the login item using the current running app's bundle path. Ephemeral paths (DerivedData, Downloads) may not exist or may have different code signatures after restart.
+
+**Discovered:** 2026-01-01
+
+**Mitigations:**
+- Document that app must be installed to `/Applications` before enabling Launch at Login
+- Add runtime detection of non-production paths with user warning (planned)
+- Provide clear troubleshooting steps in README and FAQ
+
 ---
 
 ## 10. Prior Art & Differentiation

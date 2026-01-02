@@ -4,7 +4,26 @@
 >
 > **Target:** macOS Sequoia (14.0+) | **Distribution:** Direct, Homebrew, GitHub (NOT Mac App Store)
 >
-> **Last Updated:** 2025-12-05 (UI fixes + code review fixes applied)
+> **Last Updated:** 2026-01-01 (Login item path issue documented)
+
+---
+
+## Known Issues
+
+### KI-001: Login Item Fails After Restart When Running From Xcode Debug Build
+
+**Status:** Documented | **Severity:** Medium | **Discovered:** 2026-01-01
+
+**Description:** If a user enables "Launch at Login" while running the app from Xcode's DerivedData debug build path, the login item will fail silently after macOS restart.
+
+**Root Cause:** `SMAppService.mainApp.register()` registers the login item using the current running app's bundle path. When running from DerivedData, this path is ephemeral and may not exist after Xcode cleanup or rebuild.
+
+**Workaround:**
+1. Install the app to `/Applications` before enabling "Launch at Login"
+2. If already broken: `defaults delete com.redbuttonquit.app com.redbuttonquit.launchAtLogin`
+3. Re-enable Launch at Login from the properly installed app
+
+**Planned Fix:** Add runtime validation in `PreferencesManager.updateLoginItem()` to detect non-production paths and warn users. See Phase 3.4 additional tasks.
 
 ---
 
@@ -346,6 +365,18 @@
 - [ ] Test disabling login item via preferences
 - [ ] Test actual login item works on system restart
 - [ ] Test state sync when changed in System Settings
+
+#### 3.4.1 Login Item Path Validation (Fix for KI-001)
+
+- [ ] Add method to detect if app is running from production location
+  - [ ] Check if path starts with `/Applications` or `~/Applications`
+  - [ ] Check if path contains `DerivedData` (Xcode debug build)
+  - [ ] Check if path contains `Downloads` (not installed)
+- [ ] Add warning UI when enabling Launch at Login from non-production path
+- [ ] Consider: Disable toggle entirely if not in production location
+- [ ] Add debug logging for registered login item path
+- [ ] Test: Enable from DerivedData -> warning shown
+- [ ] Test: Enable from /Applications -> works correctly
 
 ### 3.5 Settings Persistence & Sync
 

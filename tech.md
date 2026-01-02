@@ -384,6 +384,28 @@ on WindowClosed(app, window):
 | `SMAppService.register()` | Enable launch at login |
 | `SMAppService.unregister()` | Disable launch at login |
 
+#### Critical: Login Item Path Registration
+
+**Important Behavior**: When `SMAppService.mainApp.register()` is called, macOS registers the login item using the **current running app's bundle path**. This has significant implications:
+
+| Scenario | Path Registered | Result on Restart |
+|----------|-----------------|-------------------|
+| Running from `/Applications/RedButtonQuit.app` | `/Applications/RedButtonQuit.app` | ✅ Works correctly |
+| Running from Xcode DerivedData (debug build) | `/Users/.../DerivedData/.../Debug/RedButtonQuit.app` | ❌ Fails - path may not exist or signature mismatch |
+| Running from `~/Downloads/RedButtonQuit.app` | `~/Downloads/RedButtonQuit.app` | ⚠️ May work but not recommended |
+
+**Known Issue (Documented 2026-01-01)**: If a user enables "Launch at Login" while running the app from Xcode's debug build, the login item will fail after macOS restart because:
+
+1. The DerivedData path is ephemeral (Xcode may clean it)
+2. Rebuilding the app changes the code signature
+3. macOS may block apps launching from non-standard locations
+
+**Recommended Fix for Users**:
+1. Install the app to `/Applications` before enabling "Launch at Login"
+2. If login item fails, disable and re-enable from the properly installed app
+
+**Future Enhancement**: Add runtime validation in `PreferencesManager.updateLoginItem()` to detect and warn when app is running from a non-production location.
+
 ---
 
 ## 6. Data Flow
