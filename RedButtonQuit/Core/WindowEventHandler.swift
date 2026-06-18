@@ -6,6 +6,11 @@ final class WindowEventHandler {
     // MARK: - Properties
 
     private let terminationService: AppTerminationService
+    private var pendingQuitTokens: [pid_t: UUID] = [:]
+
+    private enum Constants {
+        static let windowReplacementGracePeriod: TimeInterval = 1.0
+    }
 
     // MARK: - Initialization
 
@@ -31,21 +36,23 @@ final class WindowEventHandler {
 
         switch mode {
         case .anyWindow:
-            // Quit on any window close
-            quitApp(app)
+            // Quit on any real window close, but allow fullscreen/window-mode
+            // transitions to recreate their window first.
+            scheduleQuitAfterWindowReplacementGracePeriod(for: app, mode: mode)
 
         case .lastWindow:
-            // Only quit if this was the last window
-            // We need to delay slightly because the window count
-            // might not be updated immediately after destruction
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                self?.checkAndQuitIfLastWindow(app)
-            }
+            // Only quit if this was the last window after transient
+            // fullscreen/window-mode replacements have had time to settle.
+            scheduleQuitAfterWindowReplacementGracePeriod(for: app, mode: mode)
         }
     }
 
     /// Handle a window being created
     func handleWindowCreated(for app: NSRunningApplication, element: AXUIElement) {
+        if isStandardWindow(element) {
+            cancelPendingQuitCheck(for: app)
+        }
+
         // Track window creation for potential undo feature
         // Currently just logging for debugging
         #if DEBUG
@@ -54,6 +61,34 @@ final class WindowEventHandler {
     }
 
     // MARK: - Private Methods
+
+    private func scheduleQuitAfterWindowReplacementGracePeriod(
+        for app: NSRunningApplication,
+        mode: PreferencesManager.QuitMode
+    ) {
+        let pid = app.processIdentifier
+        let token = UUID()
+        pendingQuitTokens[pid] = token
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + Constants.windowReplacementGracePeriod) { [weak self] in
+            guard let self else { return }
+            guard self.pendingQuitTokens[pid] == token else { return }
+            self.pendingQuitTokens[pid] = nil
+
+            switch mode {
+            case .anyWindow:
+                self.quitApp(app)
+
+            case .lastWindow:
+                self.checkAndQuitIfLastWindow(app)
+            }
+        }
+    }
+
+    private func cancelPendingQuitCheck(for app: NSRunningApplication) {
+        let pid = app.processIdentifier
+        pendingQuitTokens[pid] = nil
+    }
 
     private func checkAndQuitIfLastWindow(_ app: NSRunningApplication) {
         // Get current window count
