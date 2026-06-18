@@ -154,6 +154,7 @@
 - [ ] Handle edge cases:
   - [ ] App with no windows at launch
   - [ ] App with only utility windows
+  - [x] Transient fullscreen/playback window replacement before quit decision
   - [ ] Multiple windows closing simultaneously
 - [ ] Test with single-window app (TextEdit)
 - [ ] Test with multi-window app (Finder)
@@ -600,6 +601,10 @@
   - [ ] Verify terminations resume
 - [ ] Test with apps that have background processes
 - [ ] Test with apps that have detached windows
+- [ ] Test fullscreen/playback transitions:
+  - [ ] YouTube fullscreen enter/exit while video is playing
+  - [ ] YouTube fullscreen enter/exit after video ends
+  - [ ] VLC fullscreen enter/exit while media is playing
 
 ### 5.3 Manual Testing Checklist
 
