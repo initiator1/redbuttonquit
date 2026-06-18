@@ -60,6 +60,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if trusted {
             startMonitoringIfEnabled()
+        } else {
+            AccessibilityMonitor.requestAccessibilityPermission()
         }
         // Note: We do NOT reset hasCompletedOnboarding when permission is missing.
         // After a rebuild, macOS may not recognize the new code signature even though
