@@ -79,7 +79,7 @@ Some apps you might want to keep running even after closing their windows:
 To exclude an app:
 1. Click the menu bar icon
 2. Select "Excluded Apps..."
-3. Click "+" and select the app
+3. Click "+" and select a running app, search installed apps, or use the advanced bundle ID field if the app is not listed
 
 ## System Requirements
 

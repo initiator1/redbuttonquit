@@ -38,6 +38,7 @@ struct AppMenu: View {
 
         // Quick actions
         Button("Excluded Apps...") {
+            preferences.selectedTab = .exclusions
             openSettings()
         }
         .keyboardShortcut("e", modifiers: .command)

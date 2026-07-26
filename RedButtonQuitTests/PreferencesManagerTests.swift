@@ -96,6 +96,21 @@ final class PreferencesManagerTests: XCTestCase {
         )
     }
 
+    func testAddExclusionTrimsWhitespace() {
+        sut.addExclusion("  com.example.testapp \n")
+
+        XCTAssertTrue(sut.isExcluded(bundleIdentifier: "com.example.testapp"))
+        XCTAssertFalse(sut.excludedBundleIDs.contains("  com.example.testapp \n"))
+    }
+
+    func testAddExclusionIgnoresEmptyBundleIdentifier() {
+        let originalExclusions = sut.excludedBundleIDs
+
+        sut.addExclusion(" \n\t ")
+
+        XCTAssertEqual(sut.excludedBundleIDs, originalExclusions)
+    }
+
     func testRemoveExclusion() {
         let testBundleID = "com.example.testapp"
         sut.addExclusion(testBundleID)

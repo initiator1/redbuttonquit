@@ -328,6 +328,8 @@
     - [x] Option to browse /Applications
     - [x] Show app icon and name
     - [x] Search/filter capability
+    - [x] Manual bundle ID fallback for apps not shown in the picker
+    - [x] Background installed-app scan to avoid blocking the picker sheet
 - [x] Implement Advanced tab/section (for future features):
   - [x] Placeholder for per-app delays
   - [x] Placeholder for undo grace period

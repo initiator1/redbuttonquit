@@ -147,14 +147,17 @@ final class PreferencesManager: ObservableObject {
 
     /// Add an app to the exclusion list
     func addExclusion(_ bundleIdentifier: String) {
-        excludedBundleIDs.insert(bundleIdentifier)
+        let normalizedBundleIdentifier = Self.normalizeBundleIdentifier(bundleIdentifier)
+        guard !normalizedBundleIdentifier.isEmpty else { return }
+        excludedBundleIDs.insert(normalizedBundleIdentifier)
     }
 
     /// Remove an app from the exclusion list
     func removeExclusion(_ bundleIdentifier: String) {
+        let normalizedBundleIdentifier = Self.normalizeBundleIdentifier(bundleIdentifier)
         // Don't allow removing system protected apps
-        guard !Self.systemProtectedApps.contains(bundleIdentifier) else { return }
-        excludedBundleIDs.remove(bundleIdentifier)
+        guard !Self.systemProtectedApps.contains(normalizedBundleIdentifier) else { return }
+        excludedBundleIDs.remove(normalizedBundleIdentifier)
     }
 
     /// Reset all preferences to defaults
@@ -180,6 +183,10 @@ final class PreferencesManager: ObservableObject {
             print("Failed to update login item: \(error)")
             #endif
         }
+    }
+
+    private static func normalizeBundleIdentifier(_ bundleIdentifier: String) -> String {
+        bundleIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Get the current login item status from the system
