@@ -284,49 +284,12 @@ final class AccessibilityMonitor {
 
     /// Get the current window count for an application
     func getWindowCount(for app: NSRunningApplication) -> Int {
-        let appElement = AXUIElementCreateApplication(app.processIdentifier)
-
-        var windowsRef: CFTypeRef?
-        let result = AXUIElementCopyAttributeValue(
-            appElement,
-            kAXWindowsAttribute as CFString,
-            &windowsRef
-        )
-
-        guard result == .success,
-              let windows = windowsRef as? [AXUIElement] else {
-            return 0
-        }
-
-        // Filter to only standard windows (not sheets, panels, etc.)
-        return windows.filter { isStandardWindow($0) }.count
+        WindowInspector.snapshot(for: app).accessibilityStandardWindowCount ?? 0
     }
 
     /// Check if an AXUIElement is a standard window
     func isStandardWindow(_ element: AXUIElement) -> Bool {
-        var roleRef: CFTypeRef?
-        let roleResult = AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &roleRef)
-
-        guard roleResult == .success,
-              let role = roleRef as? String,
-              role == kAXWindowRole as String else {
-            return false
-        }
-
-        // Check subrole
-        var subroleRef: CFTypeRef?
-        let subroleResult = AXUIElementCopyAttributeValue(element, kAXSubroleAttribute as CFString, &subroleRef)
-
-        if subroleResult == .success, let subrole = subroleRef as? String {
-            // Standard windows have AXStandardWindow subrole
-            // Dialog windows should NOT trigger quit
-            let validSubroles: Set<String> = [
-                kAXStandardWindowSubrole as String
-            ]
-            return validSubroles.contains(subrole)
-        }
-
-        return true // Default to true if no subrole
+        WindowInspector.isStandardWindow(element)
     }
 }
 

@@ -244,7 +244,7 @@ Since we cannot use App Store automatic updates, we must implement:
 | App is in exclusion list | Normal macOS behavior (window closes, app persists) |
 | App was hidden, user closes last visible window | Quit (hidden doesn't mean "in use") |
 | App is document-based with unsaved changes | App's own "save?" dialog appears normally |
-| App replaces a window during fullscreen or playback mode transitions | Wait briefly for a replacement standard window before deciding to quit |
+| App replaces a window during fullscreen or playback mode transitions | Wait briefly, then quit only if both Accessibility and CoreGraphics show no remaining user-facing windows |
 | User Cmd+Q quits app normally | No interference |
 | App crashes | No interference—we only act on clean window closure |
 
@@ -257,7 +257,7 @@ Since we cannot use App Store automatic updates, we must implement:
 | ID | Requirement | Verification Method |
 |----|-------------|---------------------|
 | F1 | App correctly identifies when last window closes | Automated testing + manual verification |
-| F2 | App quits target application shortly after the transient replacement-window grace period | Timing measurement |
+| F2 | App quits target application shortly after the transient replacement-window grace period only when no user-facing windows remain | Timing measurement + AX/CG window-state check |
 | F3 | Excluded apps are never auto-quit | Regression testing |
 | F4 | App survives sleep/wake cycles | Manual testing |
 | F5 | App works on both Apple Silicon and Intel | Test on both architectures |

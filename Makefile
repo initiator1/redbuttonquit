@@ -31,7 +31,7 @@ ZIP_PATH = $(BUILD_DIR)/$(APP_NAME).zip
 VERSION := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" $(APP_NAME)/Supporting/Info.plist 2>/dev/null || echo "1.0.0")
 BUILD_NUMBER := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleVersion" $(APP_NAME)/Supporting/Info.plist 2>/dev/null || echo "1")
 
-.PHONY: all build debug release run archive export notarize staple dmg clean help
+.PHONY: all build debug release run test archive export notarize staple dmg clean help
 
 all: build
 
@@ -42,6 +42,7 @@ help:
 	@echo "  make build       - Build release version"
 	@echo "  make debug       - Build debug version"
 	@echo "  make run         - Build and run debug version"
+	@echo "  make test        - Run tests"
 	@echo "  make archive     - Create xcarchive"
 	@echo "  make export      - Export app from archive"
 	@echo "  make notarize    - Notarize the app"
@@ -74,6 +75,13 @@ release:
 run: debug
 	@echo "Running $(APP_NAME)..."
 	open ~/Library/Developer/Xcode/DerivedData/$(APP_NAME)*/Build/Products/Debug/$(APP_NAME).app
+
+# Test
+test:
+	@echo "Running tests..."
+	xcodebuild test -project $(PROJECT) \
+		-scheme $(SCHEME) \
+		-destination 'platform=macOS'
 
 # Archive for distribution
 archive:

@@ -3,18 +3,25 @@ import XCTest
 
 final class PreferencesManagerTests: XCTestCase {
     var sut: PreferencesManager!
+    var testDefaults: UserDefaults!
+    var testSuiteName: String!
 
     override func setUpWithError() throws {
-        // Clear UserDefaults before each test
-        let defaults = UserDefaults.standard
-        defaults.removePersistentDomain(forName: Bundle.main.bundleIdentifier ?? "com.redbuttonquit.app")
-        defaults.synchronize()
+        testSuiteName = "com.redbuttonquit.tests.\(UUID().uuidString)"
+        testDefaults = UserDefaults(suiteName: testSuiteName)
+        testDefaults.removePersistentDomain(forName: testSuiteName)
 
-        sut = PreferencesManager.shared
+        sut = PreferencesManager(
+            userDefaults: testDefaults,
+            managesLoginItem: false
+        )
     }
 
     override func tearDownWithError() throws {
-        sut.resetToDefaults()
+        testDefaults.removePersistentDomain(forName: testSuiteName)
+        sut = nil
+        testDefaults = nil
+        testSuiteName = nil
     }
 
     // MARK: - Default Values Tests
@@ -29,10 +36,6 @@ final class PreferencesManagerTests: XCTestCase {
 
     func testDefaultLaunchAtLogin() {
         XCTAssertFalse(sut.launchAtLogin, "Launch at login should be disabled by default")
-    }
-
-    func testDefaultShowMenuBarIcon() {
-        XCTAssertTrue(sut.showMenuBarIcon, "Menu bar icon should be shown by default")
     }
 
     func testDefaultPlaySound() {
@@ -162,7 +165,7 @@ final class PreferencesManagerTests: XCTestCase {
     func testIsEnabledPersists() {
         sut.isEnabled = false
 
-        let persistedValue = UserDefaults.standard.bool(forKey: "com.redbuttonquit.isEnabled")
+        let persistedValue = testDefaults.bool(forKey: "com.redbuttonquit.isEnabled")
 
         XCTAssertFalse(persistedValue, "isEnabled should persist to UserDefaults")
     }
@@ -170,7 +173,7 @@ final class PreferencesManagerTests: XCTestCase {
     func testQuitModePersists() {
         sut.quitMode = .anyWindow
 
-        let persistedValue = UserDefaults.standard.string(forKey: "com.redbuttonquit.quitMode")
+        let persistedValue = testDefaults.string(forKey: "com.redbuttonquit.quitMode")
 
         XCTAssertEqual(persistedValue, "anyWindow", "quitMode should persist to UserDefaults")
     }

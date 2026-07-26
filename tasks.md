@@ -155,6 +155,7 @@
   - [ ] App with no windows at launch
   - [ ] App with only utility windows
   - [x] Transient fullscreen/playback window replacement before quit decision
+  - [x] AX-zero/CG-visible fullscreen transition state before quit decision
   - [ ] Multiple windows closing simultaneously
 - [ ] Test with single-window app (TextEdit)
 - [ ] Test with multi-window app (Finder)
@@ -604,7 +605,8 @@
 - [ ] Test fullscreen/playback transitions:
   - [ ] YouTube fullscreen enter/exit while video is playing
   - [ ] YouTube fullscreen enter/exit after video ends
-  - [ ] VLC fullscreen enter/exit while media is playing
+  - [x] VLC fullscreen enter/exit while media is playing
+  - [x] Chrome YouTube fullscreen exit regression after AX-only timing debounce
 
 ### 5.3 Manual Testing Checklist
 

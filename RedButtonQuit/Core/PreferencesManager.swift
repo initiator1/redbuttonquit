@@ -4,7 +4,13 @@ import ServiceManagement
 
 /// Manages all user preferences for RedButtonQuit
 final class PreferencesManager: ObservableObject {
-    static let shared = PreferencesManager()
+    static let shared = PreferencesManager(
+        userDefaults: .standard,
+        managesLoginItem: true
+    )
+
+    private let userDefaults: UserDefaults
+    private let managesLoginItem: Bool
 
     // MARK: - UserDefaults Keys
 
@@ -53,32 +59,34 @@ final class PreferencesManager: ObservableObject {
     // MARK: - Published Properties
 
     @Published var isEnabled: Bool {
-        didSet { UserDefaults.standard.set(isEnabled, forKey: Keys.isEnabled) }
+        didSet { userDefaults.set(isEnabled, forKey: Keys.isEnabled) }
     }
 
     @Published var quitMode: QuitMode {
-        didSet { UserDefaults.standard.set(quitMode.rawValue, forKey: Keys.quitMode) }
+        didSet { userDefaults.set(quitMode.rawValue, forKey: Keys.quitMode) }
     }
 
     @Published var excludedBundleIDs: Set<String> {
         didSet {
-            UserDefaults.standard.set(Array(excludedBundleIDs), forKey: Keys.excludedBundleIDs)
+            userDefaults.set(Array(excludedBundleIDs), forKey: Keys.excludedBundleIDs)
         }
     }
 
     @Published var launchAtLogin: Bool {
         didSet {
-            UserDefaults.standard.set(launchAtLogin, forKey: Keys.launchAtLogin)
-            updateLoginItem()
+            userDefaults.set(launchAtLogin, forKey: Keys.launchAtLogin)
+            if managesLoginItem {
+                updateLoginItem()
+            }
         }
     }
 
     @Published var playSound: Bool {
-        didSet { UserDefaults.standard.set(playSound, forKey: Keys.playSound) }
+        didSet { userDefaults.set(playSound, forKey: Keys.playSound) }
     }
 
     @Published var hasCompletedOnboarding: Bool {
-        didSet { UserDefaults.standard.set(hasCompletedOnboarding, forKey: Keys.hasCompletedOnboarding) }
+        didSet { userDefaults.set(hasCompletedOnboarding, forKey: Keys.hasCompletedOnboarding) }
     }
 
     /// Currently selected tab in Preferences (runtime state, not persisted)
@@ -100,10 +108,13 @@ final class PreferencesManager: ObservableObject {
 
     // MARK: - Initialization
 
-    private init() {
+    init(userDefaults: UserDefaults, managesLoginItem: Bool) {
+        self.userDefaults = userDefaults
+        self.managesLoginItem = managesLoginItem
+
         // Register defaults
         let defaultExcluded = Array(Self.systemProtectedApps)
-        UserDefaults.standard.register(defaults: [
+        userDefaults.register(defaults: [
             Keys.isEnabled: true,
             Keys.quitMode: QuitMode.lastWindow.rawValue,
             Keys.excludedBundleIDs: defaultExcluded,
@@ -113,17 +124,17 @@ final class PreferencesManager: ObservableObject {
         ])
 
         // Load values
-        self.isEnabled = UserDefaults.standard.bool(forKey: Keys.isEnabled)
+        self.isEnabled = userDefaults.bool(forKey: Keys.isEnabled)
 
-        let modeRaw = UserDefaults.standard.string(forKey: Keys.quitMode) ?? QuitMode.lastWindow.rawValue
+        let modeRaw = userDefaults.string(forKey: Keys.quitMode) ?? QuitMode.lastWindow.rawValue
         self.quitMode = QuitMode(rawValue: modeRaw) ?? .lastWindow
 
-        let excludedArray = UserDefaults.standard.stringArray(forKey: Keys.excludedBundleIDs) ?? defaultExcluded
+        let excludedArray = userDefaults.stringArray(forKey: Keys.excludedBundleIDs) ?? defaultExcluded
         self.excludedBundleIDs = Set(excludedArray)
 
-        self.launchAtLogin = UserDefaults.standard.bool(forKey: Keys.launchAtLogin)
-        self.playSound = UserDefaults.standard.bool(forKey: Keys.playSound)
-        self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: Keys.hasCompletedOnboarding)
+        self.launchAtLogin = userDefaults.bool(forKey: Keys.launchAtLogin)
+        self.playSound = userDefaults.bool(forKey: Keys.playSound)
+        self.hasCompletedOnboarding = userDefaults.bool(forKey: Keys.hasCompletedOnboarding)
     }
 
     // MARK: - Public Methods

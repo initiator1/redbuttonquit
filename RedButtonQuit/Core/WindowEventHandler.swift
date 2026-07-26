@@ -31,6 +31,14 @@ final class WindowEventHandler {
         // Check if app is excluded
         guard !PreferencesManager.shared.isExcluded(bundleIdentifier: bundleID) else { return }
 
+        let destroyedElementKind = WindowInspector.windowElementKind(element)
+        guard destroyedElementKind.canRepresentClosedStandardWindow else {
+            #if DEBUG
+            print("Ignoring non-standard window destruction for: \(app.localizedName ?? bundleID)")
+            #endif
+            return
+        }
+
         // Check quit mode
         let mode = PreferencesManager.shared.quitMode
 
@@ -49,7 +57,11 @@ final class WindowEventHandler {
 
     /// Handle a window being created
     func handleWindowCreated(for app: NSRunningApplication, element: AXUIElement) {
-        if isStandardWindow(element) {
+        // Fullscreen and playback transitions can replace a standard window
+        // with another AXWindow whose subrole is not AXStandardWindow. Any
+        // newly created real window proves the destruction was not a completed
+        // user close, so cancel the pending quit for both quit modes.
+        if WindowInspector.windowElementKind(element).isWindow {
             cancelPendingQuitCheck(for: app)
         }
 
@@ -91,15 +103,18 @@ final class WindowEventHandler {
     }
 
     private func checkAndQuitIfLastWindow(_ app: NSRunningApplication) {
-        // Get current window count
-        let windowCount = getWindowCount(for: app)
+        let snapshot = WindowInspector.snapshot(for: app)
 
         #if DEBUG
-        print("Window count for \(app.localizedName ?? "unknown"): \(windowCount)")
+        print(
+            "Window counts for \(app.localizedName ?? "unknown"): " +
+                "AX=\(snapshot.accessibilityStandardWindowCount.map(String.init) ?? "unavailable"), " +
+                "CG=\(snapshot.onScreenWindowCount.map(String.init) ?? "unavailable")"
+        )
         #endif
 
-        // If no windows left, quit the app
-        if windowCount == 0 {
+        // Only quit when both APIs prove no user-facing windows remain.
+        if snapshot.canProveNoUserFacingWindows {
             quitApp(app)
         }
     }
@@ -131,43 +146,4 @@ final class WindowEventHandler {
         }
     }
 
-    private func getWindowCount(for app: NSRunningApplication) -> Int {
-        let appElement = AXUIElementCreateApplication(app.processIdentifier)
-
-        var windowsRef: CFTypeRef?
-        let result = AXUIElementCopyAttributeValue(
-            appElement,
-            kAXWindowsAttribute as CFString,
-            &windowsRef
-        )
-
-        guard result == .success,
-              let windows = windowsRef as? [AXUIElement] else {
-            return 0
-        }
-
-        // Filter to standard windows only
-        return windows.filter { isStandardWindow($0) }.count
-    }
-
-    private func isStandardWindow(_ element: AXUIElement) -> Bool {
-        var roleRef: CFTypeRef?
-        let roleResult = AXUIElementCopyAttributeValue(element, kAXRoleAttribute as CFString, &roleRef)
-
-        guard roleResult == .success,
-              let role = roleRef as? String,
-              role == kAXWindowRole as String else {
-            return false
-        }
-
-        var subroleRef: CFTypeRef?
-        let subroleResult = AXUIElementCopyAttributeValue(element, kAXSubroleAttribute as CFString, &subroleRef)
-
-        if subroleResult == .success, let subrole = subroleRef as? String {
-            // Only count standard windows
-            return subrole == kAXStandardWindowSubrole as String
-        }
-
-        return true
-    }
 }

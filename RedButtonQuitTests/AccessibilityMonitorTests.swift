@@ -16,7 +16,7 @@ final class AccessibilityMonitorTests: XCTestCase {
     // MARK: - Window Type Detection Tests
     // Note: These tests require running apps and accessibility permission
 
-    func testGetWindowCountForFinderReturnsNonNegative() {
+    func testGetWindowCountForFinderReturnsNonNegative() throws {
         guard AccessibilityMonitor.isAccessibilityEnabled() else {
             throw XCTSkip("Accessibility permission not granted")
         }
@@ -29,8 +29,8 @@ final class AccessibilityMonitorTests: XCTestCase {
         }
 
         // Create a temporary monitor for testing
-        let mockHandler = MockWindowEventHandler()
-        let monitor = AccessibilityMonitor(eventHandler: mockHandler)
+        let handler = WindowEventHandler(terminationService: AppTerminationService())
+        let monitor = AccessibilityMonitor(eventHandler: handler)
 
         let windowCount = monitor.getWindowCount(for: finder)
 
@@ -40,23 +40,75 @@ final class AccessibilityMonitorTests: XCTestCase {
             "Window count should be non-negative"
         )
     }
-}
 
-// MARK: - Mock Objects
+    func testFullscreenReplacementCountsAsUserFacingWindow() {
+        let snapshot = WindowInspector.AppWindowSnapshot(
+            accessibilityStandardWindowCount: 0,
+            onScreenWindowCount: 1
+        )
 
-class MockWindowEventHandler: WindowEventHandler {
-    var windowDestroyedCalls: [(app: NSRunningApplication, element: AXUIElement)] = []
-    var windowCreatedCalls: [(app: NSRunningApplication, element: AXUIElement)] = []
-
-    init() {
-        super.init(terminationService: AppTerminationService())
+        XCTAssertTrue(snapshot.hasUserFacingWindows)
+        XCTAssertFalse(snapshot.canProveNoUserFacingWindows)
     }
 
-    override func handleWindowDestroyed(for app: NSRunningApplication, element: AXUIElement) {
-        windowDestroyedCalls.append((app, element))
+    func testUnavailableWindowAPIStateCannotProveLastWindowClosed() {
+        let snapshot = WindowInspector.AppWindowSnapshot(
+            accessibilityStandardWindowCount: nil,
+            onScreenWindowCount: 0
+        )
+
+        XCTAssertFalse(snapshot.canProveNoUserFacingWindows)
     }
 
-    override func handleWindowCreated(for app: NSRunningApplication, element: AXUIElement) {
-        windowCreatedCalls.append((app, element))
+    func testOnlyConfirmedZeroWindowCountsProveLastWindowClosed() {
+        let snapshot = WindowInspector.AppWindowSnapshot(
+            accessibilityStandardWindowCount: 0,
+            onScreenWindowCount: 0
+        )
+
+        XCTAssertTrue(snapshot.canProveNoUserFacingWindows)
+    }
+
+    func testOtherAXWindowCancelsFullscreenReplacementQuit() {
+        XCTAssertTrue(WindowInspector.WindowElementKind.standard.isWindow)
+        XCTAssertTrue(WindowInspector.WindowElementKind.otherWindow.isWindow)
+        XCTAssertFalse(WindowInspector.WindowElementKind.nonWindow.isWindow)
+        XCTAssertFalse(WindowInspector.WindowElementKind.unknown.isWindow)
+    }
+
+    func testCoreGraphicsLayerZeroWindowIsUserFacing() {
+        let ownerPID = pid_t(4242)
+        let window: [String: Any] = [
+            kCGWindowOwnerPID as String: NSNumber(value: ownerPID),
+            kCGWindowLayer as String: NSNumber(value: 0),
+            kCGWindowIsOnscreen as String: NSNumber(value: true),
+            kCGWindowAlpha as String: NSNumber(value: 1.0),
+            kCGWindowBounds as String: [
+                "Width": NSNumber(value: 1496),
+                "Height": NSNumber(value: 967)
+            ]
+        ]
+
+        XCTAssertTrue(
+            WindowInspector.isUserFacingOnScreenWindow(window, ownerPID: ownerPID)
+        )
+    }
+
+    func testCoreGraphicsOverlayIsNotUserFacing() {
+        let ownerPID = pid_t(4242)
+        let window: [String: Any] = [
+            kCGWindowOwnerPID as String: NSNumber(value: ownerPID),
+            kCGWindowLayer as String: NSNumber(value: 8),
+            kCGWindowIsOnscreen as String: NSNumber(value: true),
+            kCGWindowAlpha as String: NSNumber(value: 1.0),
+            kCGWindowBounds as String: [
+                "Width": NSNumber(value: 483),
+                "Height": NSNumber(value: 84)
+            ]
+        ]
+
+        XCTAssertFalse(
+            WindowInspector.isUserFacingOnScreenWindow(window, ownerPID: ownerPID)
+        )
     }
 }
