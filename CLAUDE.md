@@ -119,6 +119,25 @@ open /Applications/RedButtonQuit.app
 ```
 Then re-grant permission when prompted.
 
+**KI-003: Deleted Accessibility Entry Leaves No Recovery Path (fixed in-app)**
+Removing RedButtonQuit's row from System Settings → Privacy & Security → Accessibility while
+the app is running leaves it unable to recover on its own. macOS pins a process's accessibility
+verdict for the process lifetime, and opening the pane shows no row to toggle.
+
+Duplicate rows accumulate because the app is ad-hoc signed (`Signature=adhoc`, no Team ID), so
+TCC identifies each build by its cdhash. Every rebuild installed to `/Applications` can add a
+new row; deleting all of them removes the real one too.
+
+**Fix:** `AccessibilityMonitor.presentAccessibilityRequest()` calls
+`AXIsProcessTrustedWithOptions` before opening the pane, which recreates the row. When the row
+is missing for an already-running process, `AccessibilityMonitor.relaunchForPermission()` quits
+and relaunches so TCC evaluates a fresh process. Both are wired to the menu bar menu and the
+Preferences → General status section; every permission-related button in the UI goes through
+`presentAccessibilityRequest()`, never `openAccessibilitySettings()` alone.
+
+**Permanent removal** requires a stable Developer ID signature so TCC keys on the identity
+instead of the cdhash.
+
 ## Testing Notes
 
 - The Debug app/test host uses `com.redbuttonquit.app.debug`, keeping its TCC record separate from the installed Release app

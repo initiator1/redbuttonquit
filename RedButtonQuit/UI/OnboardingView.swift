@@ -202,7 +202,7 @@ class PermissionChecker: ObservableObject {
     }
 
     func openSettings() {
-        AccessibilityMonitor.openAccessibilitySettings()
+        AccessibilityMonitor.presentAccessibilityRequest()
         isChecking = true
         // Ensure polling continues
         if timer == nil {

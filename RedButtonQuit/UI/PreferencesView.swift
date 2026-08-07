@@ -70,7 +70,19 @@ struct GeneralTab: View {
                         Label("Not Granted", systemImage: "exclamationmark.triangle.fill")
                             .foregroundColor(.orange)
                         Button("Grant Permission") {
-                            AccessibilityMonitor.openAccessibilitySettings()
+                            AccessibilityMonitor.presentAccessibilityRequest()
+                        }
+                    }
+                }
+
+                if !AccessibilityMonitor.isAccessibilityEnabled() {
+                    HStack {
+                        Text("Not listed in System Settings? Restart RedButtonQuit so macOS re-registers it.")
+                            .font(.callout)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Button("Restart") {
+                            AccessibilityMonitor.relaunchForPermission()
                         }
                     }
                 }

@@ -97,6 +97,32 @@ final class AccessibilityMonitor {
         NSWorkspace.shared.open(url)
     }
 
+    /// Re-register with TCC, then open the Accessibility pane.
+    ///
+    /// Opening the pane on its own strands the user whenever the app has no row in the
+    /// Accessibility list — deleted by hand, or dropped when a rebuild changed the signature.
+    /// The trusted-check call is what recreates the row, so it has to run first.
+    static func presentAccessibilityRequest() {
+        requestAccessibilityPermission()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            openAccessibilitySettings()
+        }
+    }
+
+    /// Quit and relaunch so TCC evaluates permission against a fresh process.
+    ///
+    /// macOS pins a process's accessibility verdict for its lifetime. If the entry is removed
+    /// while RedButtonQuit is running, no in-process call can recover it — only a new process
+    /// gets re-registered.
+    static func relaunchForPermission() {
+        let bundlePath = Bundle.main.bundlePath
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/bin/sh")
+        task.arguments = ["-c", "sleep 1; /usr/bin/open \"\(bundlePath)\""]
+        try? task.run()
+        NSApplication.shared.terminate(nil)
+    }
+
     // MARK: - Public Methods
 
     /// Start monitoring window events for all applications

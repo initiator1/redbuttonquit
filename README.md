@@ -131,6 +131,19 @@ Most apps work correctly. Some apps with unusual window management (certain game
 2. Delete RedButtonQuit.app from Applications
 3. (Optional) Remove preferences: `defaults delete com.redbuttonquit.app`
 
+### RedButtonQuit isn't listed under Accessibility, or I deleted its entry
+
+If you removed RedButtonQuit from System Settings → Privacy & Security → Accessibility, the
+running app can't put itself back — macOS locks in a permission verdict for the lifetime of a
+process.
+
+**To fix:** open the RedButtonQuit menu bar icon and choose **Restart to Re-request Permission**.
+The app relaunches, re-registers itself, and reappears in the Accessibility list ready to enable.
+
+You may see more than one RedButtonQuit entry if you've installed several builds. Delete the
+extras, keep the one that toggles on cleanly, and if you delete them all use the restart item
+above to start over.
+
 ### "Launch at Login" stopped working after restart
 
 This happens when the app was running from a non-standard location (like Xcode's debug build) when you enabled the feature.
