@@ -31,7 +31,7 @@ ZIP_PATH = $(BUILD_DIR)/$(APP_NAME).zip
 VERSION := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" $(APP_NAME)/Supporting/Info.plist 2>/dev/null || echo "1.0.0")
 BUILD_NUMBER := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleVersion" $(APP_NAME)/Supporting/Info.plist 2>/dev/null || echo "1")
 
-.PHONY: all build debug release run test archive export notarize staple dmg clean help
+.PHONY: all build debug release run install test archive export notarize staple dmg clean help
 
 all: build
 
@@ -42,6 +42,7 @@ help:
 	@echo "  make build       - Build release version"
 	@echo "  make debug       - Build debug version"
 	@echo "  make run         - Build and run debug version"
+	@echo "  make install     - Install to /Applications and reset Accessibility grant"
 	@echo "  make test        - Run tests"
 	@echo "  make archive     - Create xcarchive"
 	@echo "  make export      - Export app from archive"
@@ -74,7 +75,25 @@ release:
 
 run: debug
 	@echo "Running $(APP_NAME)..."
-	open ~/Library/Developer/Xcode/DerivedData/$(APP_NAME)*/Build/Products/Debug/$(APP_NAME).app
+	open ~/Library/Developer/Xcode/DerivedData/$(APP_NAME)*/Build/Products/Debug/$(APP_NAME)Debug.app
+
+# Install the release build to /Applications and reset its Accessibility grant.
+#
+# The app is ad-hoc signed, so TCC pins the grant to the exact code hash. Every rebuild
+# produces a new hash, which leaves the System Settings toggle switched on while the app is
+# actually denied — the confusing state described in KI-002. Clearing the grant as part of
+# installing makes that state impossible; you re-grant once, against the binary you just built.
+install: release
+	@echo "Installing $(APP_NAME) to /Applications..."
+	@pkill -f "/Applications/$(APP_NAME).app/Contents/MacOS/$(APP_NAME)" 2>/dev/null || true
+	@sleep 1
+	@rm -rf /Applications/$(APP_NAME).app
+	@cp -R ~/Library/Developer/Xcode/DerivedData/$(APP_NAME)-*/Build/Products/Release/$(APP_NAME).app /Applications/
+	@tccutil reset Accessibility com.redbuttonquit.app >/dev/null 2>&1 || true
+	@open /Applications/$(APP_NAME).app
+	@echo ""
+	@echo "Installed. Accessibility permission was reset for the new build."
+	@echo "Open the $(APP_NAME) menu bar icon and choose 'Grant Accessibility Permission...'"
 
 # Test
 test:
@@ -82,6 +101,9 @@ test:
 	xcodebuild test -project $(PROJECT) \
 		-scheme $(SCHEME) \
 		-destination 'platform=macOS'
+	@# The test host touches the Accessibility API, which leaves it in the Accessibility
+	@# list. Clear it so only the real app is ever listed there.
+	@tccutil reset Accessibility com.redbuttonquit.app.debug >/dev/null 2>&1 || true
 
 # Archive for distribution
 archive:

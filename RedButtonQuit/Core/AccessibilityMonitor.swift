@@ -97,6 +97,9 @@ final class AccessibilityMonitor {
         NSWorkspace.shared.open(url)
     }
 
+    /// Launch argument telling a relaunched instance to walk the user through granting permission.
+    static let permissionRequestArgument = "--request-accessibility"
+
     /// Re-register with TCC, then open the Accessibility pane.
     ///
     /// Opening the pane on its own strands the user whenever the app has no row in the
@@ -109,17 +112,31 @@ final class AccessibilityMonitor {
         }
     }
 
-    /// Quit and relaunch so TCC evaluates permission against a fresh process.
+    /// The single recovery path offered to the user: relaunch, then request permission.
     ///
-    /// macOS pins a process's accessibility verdict for its lifetime. If the entry is removed
-    /// while RedButtonQuit is running, no in-process call can recover it — only a new process
-    /// gets re-registered.
-    static func relaunchForPermission() {
+    /// macOS pins a process's accessibility verdict for its lifetime, so an app that lost its
+    /// entry while running can never recover in place — asking again from the same process is
+    /// silently ignored. Relaunching first makes one action work from every state, which is why
+    /// the UI offers no separate "restart" choice.
+    static func beginPermissionRecovery() {
         let bundlePath = Bundle.main.bundlePath
+        let pid = ProcessInfo.processInfo.processIdentifier
+
+        // Wait for this process to actually exit before relaunching. `open` would otherwise
+        // just reactivate the dying instance and leave the user with no app at all.
+        let script = """
+        for _ in $(seq 1 50); do
+            kill -0 \(pid) 2>/dev/null || break
+            sleep 0.1
+        done
+        /usr/bin/open -n "\(bundlePath)" --args \(permissionRequestArgument)
+        """
+
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/bin/sh")
-        task.arguments = ["-c", "sleep 1; /usr/bin/open \"\(bundlePath)\""]
+        task.arguments = ["-c", script]
         try? task.run()
+
         NSApplication.shared.terminate(nil)
     }
 

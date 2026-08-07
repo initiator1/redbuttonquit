@@ -427,7 +427,8 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.redbuttonquit.app.debug;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = RedButtonQuit;
+				PRODUCT_NAME = RedButtonQuitDebug;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -476,7 +477,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RedButtonQuit.app/Contents/MacOS/RedButtonQuit";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RedButtonQuitDebug.app/Contents/MacOS/RedButtonQuitDebug";
 			};
 			name = Debug;
 		};

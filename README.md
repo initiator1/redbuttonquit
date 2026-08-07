@@ -137,12 +137,9 @@ If you removed RedButtonQuit from System Settings → Privacy & Security → Acc
 running app can't put itself back — macOS locks in a permission verdict for the lifetime of a
 process.
 
-**To fix:** open the RedButtonQuit menu bar icon and choose **Restart to Re-request Permission**.
-The app relaunches, re-registers itself, and reappears in the Accessibility list ready to enable.
-
-You may see more than one RedButtonQuit entry if you've installed several builds. Delete the
-extras, keep the one that toggles on cleanly, and if you delete them all use the restart item
-above to start over.
+**To fix:** open the RedButtonQuit menu bar icon and choose **Grant Accessibility Permission…**.
+The app restarts itself, re-registers with macOS, and opens System Settings with its switch
+ready to turn on. This works no matter what state the permission was left in.
 
 ### "Launch at Login" stopped working after restart
 

@@ -109,38 +109,61 @@ When "Launch at Login" is enabled while running from a non-production location (
 **KI-002: TCC Database Stale After Rebuild**
 Each Xcode rebuild changes the app's code signature, causing macOS TCC (Transparency, Consent, and Control) to treat it as a new/untrusted app. The accessibility permission toggle in System Settings may appear enabled but the underlying database is stale. `AXIsProcessTrusted()` returns cached/incorrect values.
 
-**Symptoms:** App shows "Accessibility Permission: Not Granted" even after toggling permission in System Settings.
+TCC pins the grant to the exact code hash (verified: the stored requirement is a bare
+`cdhash H"..."`, since ad-hoc signing gives it no stable identity to key on). After a rebuild
+the System Settings toggle still reads **on** while the app is denied at runtime, which is why
+`isAccessibilityEnabled()` probes Finder for real instead of trusting `AXIsProcessTrusted()`.
 
-**Fix:** Reset TCC for this app and relaunch:
-```bash
-sudo tccutil reset Accessibility com.redbuttonquit.app
-pkill -f RedButtonQuit
-open /Applications/RedButtonQuit.app
-```
-Then re-grant permission when prompted.
+**Symptoms:** App shows "Accessibility Permission: Not Granted" even after toggling permission in System Settings. Windows close and nothing is quit.
+
+**Fix:** use `make install`, which resets the grant as part of installing, then grant once from
+the menu bar. Never `cp` a new build over `/Applications` without resetting — that is what
+produces the on-but-denied state. `tccutil reset` needs no `sudo` for this user's own record.
+
+**Permanent removal** requires a stable Developer ID signature, the same prerequisite as
+notarization.
 
 **KI-003: Deleted Accessibility Entry Leaves No Recovery Path (fixed in-app)**
 Removing RedButtonQuit's row from System Settings → Privacy & Security → Accessibility while
 the app is running leaves it unable to recover on its own. macOS pins a process's accessibility
 verdict for the process lifetime, and opening the pane shows no row to toggle.
 
-Duplicate rows accumulate because the app is ad-hoc signed (`Signature=adhoc`, no Team ID), so
-TCC identifies each build by its cdhash. Every rebuild installed to `/Applications` can add a
-new row; deleting all of them removes the real one too.
+The trigger is two rows that look identical. See KI-004.
 
-**Fix:** `AccessibilityMonitor.presentAccessibilityRequest()` calls
-`AXIsProcessTrustedWithOptions` before opening the pane, which recreates the row. When the row
-is missing for an already-running process, `AccessibilityMonitor.relaunchForPermission()` quits
-and relaunches so TCC evaluates a fresh process. Both are wired to the menu bar menu and the
-Preferences → General status section; every permission-related button in the UI goes through
-`presentAccessibilityRequest()`, never `openAccessibilitySettings()` alone.
+**Fix:** the UI exposes exactly one action, "Grant Accessibility Permission…", wired to
+`AccessibilityMonitor.beginPermissionRecovery()`. It always relaunches, passing
+`--request-accessibility`; the fresh process calls `AXIsProcessTrustedWithOptions` (recreating
+the row) and opens the pane. Relaunching unconditionally is what lets one button work from
+every state, so **do not add a separate "restart" affordance** — the user can't be asked to
+diagnose which state they're in.
 
-**Permanent removal** requires a stable Developer ID signature so TCC keys on the identity
-instead of the cdhash.
+Ordinary launches without the flag prompt but never open System Settings, so a user who
+declines isn't ambushed at every login. Onboarding keeps `presentAccessibilityRequest()`
+without a relaunch: that process just started, so its row already exists, and relaunching
+would throw the user back to step 1 of the wizard.
+
+The shell relaunch waits for the current PID to exit before calling `open -n`. Without the
+wait, `open` reactivates the dying instance and the user is left with no app at all.
+
+**KI-004: Test Host Appeared as a Second "RedButtonQuit.app"**
+The Debug product used to be named `RedButtonQuit.app` too, so the test host
+(`com.redbuttonquit.app.debug`) showed up in the Accessibility list under a label identical to
+the real app's. Users delete the wrong one — that is how KI-003 gets triggered in practice.
+
+**Fix:** the Debug configuration sets `PRODUCT_NAME = RedButtonQuitDebug` (with
+`PRODUCT_MODULE_NAME = RedButtonQuit` so `@testable import RedButtonQuit` still resolves), and
+the Debug `TEST_HOST` points at `RedButtonQuitDebug.app`. Any row labeled `RedButtonQuit.app` is
+now unambiguously the real app.
+
+Merely skipping the permission prompt under XCTest is **not** sufficient: any Accessibility API
+call registers the caller with TCC, and `isAccessibilityEnabled()` probes Finder. The test host
+will keep appearing, which is why `make test` clears its row afterwards. `AppDelegate` still
+skips the prompt under XCTest so no permission dialog interrupts a test run.
 
 ## Testing Notes
 
-- The Debug app/test host uses `com.redbuttonquit.app.debug`, keeping its TCC record separate from the installed Release app
+- The Debug app/test host builds as `RedButtonQuitDebug.app` with bundle ID `com.redbuttonquit.app.debug`, keeping both its TCC record and its Accessibility-list label distinct from the installed Release app
+- `make test` clears the test host's Accessibility row after the run; `xcodebuild test` on its own leaves it behind
 - Tests use isolated `UserDefaults` suites and never alter the live app's preferences or login item
 - The real Finder Accessibility test is skipped when the test host lacks permission; the remaining window-classification tests still run
 - `AppTerminationServiceTests` validates protected apps cannot be terminated (uses real `NSRunningApplication` instances — Finder, Dock)
@@ -149,14 +172,19 @@ instead of the cdhash.
 
 ## Post-Build Protocol
 
-**IMPORTANT:** After any build that gets installed to `/Applications`, remind the user:
+**Install with `make install`, never by copying the bundle into `/Applications` yourself.** The
+target kills the running app, replaces it, resets the Accessibility grant, and relaunches. The
+reset is the point: a new build has a new code hash, so the old grant no longer applies, and
+skipping the reset leaves the toggle reading "on" while the app is denied (KI-002).
 
-> "After rebuilding, macOS may not recognize the new code signature for accessibility permissions. If the app shows 'Not Granted' even after toggling in System Settings, run:
-> ```bash
-> sudo tccutil reset Accessibility com.redbuttonquit.app
-> pkill -f RedButtonQuit
-> open /Applications/RedButtonQuit.app
-> ```
-> Then re-grant permission when prompted."
+Then tell the user, in these terms:
 
-This is a known macOS limitation with TCC database caching (see KI-002).
+> "The new build needs Accessibility permission again — macOS ties the permission to the exact
+> version of the app. Click the RedButtonQuit menu bar icon, choose 'Grant Accessibility
+> Permission...', and flip the switch when System Settings opens."
+
+Verify it actually took, rather than reporting the install as done: the grant is live only when
+`sqlite3 "/Library/Application Support/com.apple.TCC/TCC.db" "select auth_value from access
+where client='com.redbuttonquit.app'"` returns `2` **and** the stored `csreq` cdhash matches
+`codesign -dv --verbose=4 /Applications/RedButtonQuit.app`. A functional check is stronger
+still: open TextEdit, close its last window, confirm TextEdit quits.

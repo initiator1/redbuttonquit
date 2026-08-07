@@ -66,11 +66,7 @@ struct AppMenu: View {
 
         if !AccessibilityMonitor.isAccessibilityEnabled() {
             Button("Grant Accessibility Permission...") {
-                AccessibilityMonitor.presentAccessibilityRequest()
-            }
-
-            Button("Restart to Re-request Permission") {
-                AccessibilityMonitor.relaunchForPermission()
+                AccessibilityMonitor.beginPermissionRecovery()
             }
         }
 
