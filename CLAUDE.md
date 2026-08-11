@@ -106,22 +106,28 @@ All three services are retained by `AppDelegate`. The monitor is the only compon
 **KI-001: Login Item Path Registration**
 When "Launch at Login" is enabled while running from a non-production location (e.g., Xcode DerivedData), the login item silently fails after macOS restart. The app must be installed to `/Applications` before enabling this feature. See README FAQ for user-facing fix instructions.
 
-**KI-002: TCC Database Stale After Rebuild**
-Each Xcode rebuild changes the app's code signature, causing macOS TCC (Transparency, Consent, and Control) to treat it as a new/untrusted app. The accessibility permission toggle in System Settings may appear enabled but the underlying database is stale. `AXIsProcessTrusted()` returns cached/incorrect values.
+**KI-002: TCC Grant Broke On Every Rebuild — RESOLVED by Developer ID signing**
+While the app was ad-hoc signed, TCC had no stable identity to key on and pinned the grant to
+the exact code hash. Each rebuild produced a new hash, so the System Settings toggle kept
+reading **on** while the app was denied at runtime — windows closed, nothing quit, no error
+anywhere.
 
-TCC pins the grant to the exact code hash (verified: the stored requirement is a bare
-`cdhash H"..."`, since ad-hoc signing gives it no stable identity to key on). After a rebuild
-the System Settings toggle still reads **on** while the app is denied at runtime, which is why
-`isAccessibilityEnabled()` probes Finder for real instead of trusting `AXIsProcessTrusted()`.
+Release is now signed with `Developer ID Application: INITIATOR LLC (MDWFZC6396)`, and the
+stored TCC requirement is identity-based:
 
-**Symptoms:** App shows "Accessibility Permission: Not Granted" even after toggling permission in System Settings. Windows close and nothing is quit.
+```
+anchor apple generic and identifier "com.redbuttonquit.app" and (... certificate leaf[subject.OU] = MDWFZC6396)
+```
 
-**Fix:** use `make install`, which resets the grant as part of installing, then grant once from
-the menu bar. Never `cp` a new build over `/Applications` without resetting — that is what
-produces the on-but-denied state. `tccutil reset` needs no `sudo` for this user's own record.
+Verified end to end: rebuilt with a different cdhash, reinstalled without any reset, permission
+stayed granted and the app still quit TextEdit on last-window close.
 
-**Permanent removal** requires a stable Developer ID signature, the same prerequisite as
-notarization.
+**Do not reintroduce a `tccutil reset` into `make install`.** It was scaffolding for the ad-hoc
+era and now just forces pointless re-granting. `make reset-permission` exists for the rare cases
+(switching signing identity, or a TCC record macOS has corrupted).
+
+`isAccessibilityEnabled()` still probes Finder rather than trusting `AXIsProcessTrusted()`.
+Keep it — it is what makes the Debug build and any future identity change fail honestly.
 
 **KI-003: Deleted Accessibility Entry Leaves No Recovery Path (fixed in-app)**
 Removing RedButtonQuit's row from System Settings → Privacy & Security → Accessibility while
@@ -170,21 +176,35 @@ skips the prompt under XCTest so no permission dialog interrupts a test run.
 - `PreferencesManagerTests` and `AccessibilityMonitorTests` also exist
 - Real window monitoring tests are difficult to automate; manual testing recommended for accessibility features
 
+## Code Signing
+
+Release builds are signed manually with `Developer ID Application: INITIATOR LLC (MDWFZC6396)`
+(`CODE_SIGN_STYLE = Manual`, `DEVELOPMENT_TEAM = MDWFZC6396`, hardened runtime on). Two
+Developer ID certificates share team `MDWFZC6396` — one for Douglas Baker, one for INITIATOR
+LLC — so both the project's `CODE_SIGN_IDENTITY[sdk=macosx*]` and `exportOptions.plist`
+`signingCertificate` name the LLC identity in full. Naming only the team would pick either one.
+
+Debug stays ad-hoc ("Sign to Run Locally") so Xcode can attach a debugger; hardened runtime plus
+Developer ID would block that. Its permission churn no longer matters, since it installs under a
+different name and bundle ID (KI-004).
+
+`make export` produces the distributable: hardened runtime, secure timestamp, and a signature
+that satisfies its own designated requirement. Verify with `codesign --verify --strict -vv`
+and confirm `Timestamp=` is present — notarization rejects builds without one.
+
+**Notarization is not yet wired.** `make notarize` needs a stored keychain profile that does not
+exist (`xcrun notarytool history --keychain-profile RedButtonQuit` → "No Keychain password item
+found"). Creating it requires an Apple ID plus an app-specific password, which only BOSS can
+generate and enter — set `NOTARY_PROFILE` in the Makefile once it exists.
+
 ## Post-Build Protocol
 
-**Install with `make install`, never by copying the bundle into `/Applications` yourself.** The
-target kills the running app, replaces it, resets the Accessibility grant, and relaunches. The
-reset is the point: a new build has a new code hash, so the old grant no longer applies, and
-skipping the reset leaves the toggle reading "on" while the app is denied (KI-002).
+**Install with `make install`, never by copying the bundle into `/Applications` yourself.** It
+kills the running app, replaces it, verifies the signature before launching, and relaunches.
+Accessibility permission carries over — no reset, no re-grant.
 
-Then tell the user, in these terms:
-
-> "The new build needs Accessibility permission again — macOS ties the permission to the exact
-> version of the app. Click the RedButtonQuit menu bar icon, choose 'Grant Accessibility
-> Permission...', and flip the switch when System Settings opens."
-
-Verify it actually took, rather than reporting the install as done: the grant is live only when
+Report an install as done only after checking it, not from a successful build:
 `sqlite3 "/Library/Application Support/com.apple.TCC/TCC.db" "select auth_value from access
-where client='com.redbuttonquit.app'"` returns `2` **and** the stored `csreq` cdhash matches
-`codesign -dv --verbose=4 /Applications/RedButtonQuit.app`. A functional check is stronger
-still: open TextEdit, close its last window, confirm TextEdit quits.
+where client='com.redbuttonquit.app'"` must return `2`. The stronger check is functional: open
+TextEdit, close its last window, confirm TextEdit quits. A build that compiles and installs
+proves nothing about whether the app is actually authorized.

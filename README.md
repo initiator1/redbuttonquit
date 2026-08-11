@@ -97,13 +97,16 @@ RedButtonQuit requires Accessibility permission to detect when you close windows
 - Log your activity
 - Access your files
 
-The app is [notarized by Apple](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution), ensuring it's free from malware.
+The app is code-signed with a Developer ID certificate issued to INITIATOR LLC. Apple
+[notarization](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution)
+is set up in the build but has not been run yet — the first published binary will be notarized
+before release.
 
 ## Why Not the Mac App Store?
 
 Apps that use the Accessibility API cannot be distributed through the Mac App Store because they require disabling App Sandbox. This is a macOS security requirement, not a choice.
 
-RedButtonQuit is distributed as notarized freeware directly from this repository.
+RedButtonQuit is distributed as freeware directly from this repository.
 
 ## FAQ
 

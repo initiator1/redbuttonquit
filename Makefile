@@ -31,7 +31,7 @@ ZIP_PATH = $(BUILD_DIR)/$(APP_NAME).zip
 VERSION := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" $(APP_NAME)/Supporting/Info.plist 2>/dev/null || echo "1.0.0")
 BUILD_NUMBER := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleVersion" $(APP_NAME)/Supporting/Info.plist 2>/dev/null || echo "1")
 
-.PHONY: all build debug release run install test archive export notarize staple dmg clean help
+.PHONY: all build debug release run install reset-permission test archive export notarize staple dmg clean help
 
 all: build
 
@@ -42,7 +42,8 @@ help:
 	@echo "  make build       - Build release version"
 	@echo "  make debug       - Build debug version"
 	@echo "  make run         - Build and run debug version"
-	@echo "  make install     - Install to /Applications and reset Accessibility grant"
+	@echo "  make install     - Install to /Applications (keeps Accessibility grant)"
+	@echo "  make reset-permission - Clear the Accessibility grant and relaunch"
 	@echo "  make test        - Run tests"
 	@echo "  make archive     - Create xcarchive"
 	@echo "  make export      - Export app from archive"
@@ -77,23 +78,30 @@ run: debug
 	@echo "Running $(APP_NAME)..."
 	open ~/Library/Developer/Xcode/DerivedData/$(APP_NAME)*/Build/Products/Debug/$(APP_NAME)Debug.app
 
-# Install the release build to /Applications and reset its Accessibility grant.
+# Install the release build to /Applications, keeping the Accessibility grant intact.
 #
-# The app is ad-hoc signed, so TCC pins the grant to the exact code hash. Every rebuild
-# produces a new hash, which leaves the System Settings toggle switched on while the app is
-# actually denied — the confusing state described in KI-002. Clearing the grant as part of
-# installing makes that state impossible; you re-grant once, against the binary you just built.
+# Release is signed with the INITIATOR LLC Developer ID, so the grant is keyed to that identity
+# rather than to a code hash. Rebuilds keep working without re-granting. Do not add a tccutil
+# reset here — that was only needed while the app was ad-hoc signed (see KI-002).
 install: release
 	@echo "Installing $(APP_NAME) to /Applications..."
 	@pkill -f "/Applications/$(APP_NAME).app/Contents/MacOS/$(APP_NAME)" 2>/dev/null || true
 	@sleep 1
 	@rm -rf /Applications/$(APP_NAME).app
 	@cp -R ~/Library/Developer/Xcode/DerivedData/$(APP_NAME)-*/Build/Products/Release/$(APP_NAME).app /Applications/
-	@tccutil reset Accessibility com.redbuttonquit.app >/dev/null 2>&1 || true
+	@codesign --verify --strict /Applications/$(APP_NAME).app || \
+		(echo "SIGNATURE INVALID — not launching"; exit 1)
 	@open /Applications/$(APP_NAME).app
-	@echo ""
-	@echo "Installed. Accessibility permission was reset for the new build."
-	@echo "Open the $(APP_NAME) menu bar icon and choose 'Grant Accessibility Permission...'"
+	@echo "Installed. Accessibility permission carries over."
+
+# Clear the Accessibility grant. Needed only when switching signing identity, or to recover a
+# record that macOS has got into a bad state.
+reset-permission:
+	@tccutil reset Accessibility com.redbuttonquit.app
+	@pkill -f "/Applications/$(APP_NAME).app/Contents/MacOS/$(APP_NAME)" 2>/dev/null || true
+	@sleep 1
+	@open /Applications/$(APP_NAME).app 2>/dev/null || true
+	@echo "Grant cleared. Use the menu bar item 'Grant Accessibility Permission...' to re-grant."
 
 # Test
 test:
@@ -116,7 +124,7 @@ archive:
 		archive
 
 # Export from archive
-export: archive
+export: archive exportOptions.plist
 	@echo "Exporting app..."
 	xcodebuild -exportArchive \
 		-archivePath $(ARCHIVE_PATH) \

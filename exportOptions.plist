@@ -7,6 +7,10 @@
     <key>destination</key>
     <string>export</string>
     <key>signingStyle</key>
-    <string>automatic</string>
+    <string>manual</string>
+    <key>teamID</key>
+    <string>MDWFZC6396</string>
+    <key>signingCertificate</key>
+    <string>Developer ID Application: INITIATOR LLC (MDWFZC6396)</string>
 </dict>
 </plist>
