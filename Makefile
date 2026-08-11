@@ -22,9 +22,13 @@ APP_PATH = $(EXPORT_PATH)/$(APP_NAME).app
 DMG_PATH = $(BUILD_DIR)/$(APP_NAME).dmg
 ZIP_PATH = $(BUILD_DIR)/$(APP_NAME).zip
 
-# Notarization (set these in environment or .env file)
-# APPLE_ID = your@email.com
-# TEAM_ID = XXXXXXXXXX
+# Signing. Two Developer ID certs share team MDWFZC6396 (Douglas Baker and INITIATOR LLC), so
+# the identity must be named in full — "Developer ID Application" alone picks either one.
+TEAM_ID = MDWFZC6396
+SIGN_IDENTITY = Developer ID Application: INITIATOR LLC ($(TEAM_ID))
+
+# Notarization. The keychain profile is created once by the account holder with:
+#   xcrun notarytool store-credentials "RedButtonQuit" --apple-id <id> --team-id $(TEAM_ID)
 NOTARY_PROFILE = RedButtonQuit
 
 # Versioning
@@ -131,7 +135,8 @@ export: archive exportOptions.plist
 		-exportPath $(EXPORT_PATH) \
 		-exportOptionsPlist exportOptions.plist
 
-# Create exportOptions.plist if it doesn't exist
+# Recreate exportOptions.plist if it goes missing. Must stay in sync with the checked-in file —
+# manual signing plus the full identity name, or the export picks the wrong Developer ID cert.
 exportOptions.plist:
 	@echo "Creating exportOptions.plist..."
 	@echo '<?xml version="1.0" encoding="UTF-8"?>' > $@
@@ -142,6 +147,12 @@ exportOptions.plist:
 	@echo '    <string>developer-id</string>' >> $@
 	@echo '    <key>destination</key>' >> $@
 	@echo '    <string>export</string>' >> $@
+	@echo '    <key>signingStyle</key>' >> $@
+	@echo '    <string>manual</string>' >> $@
+	@echo '    <key>teamID</key>' >> $@
+	@echo '    <string>$(TEAM_ID)</string>' >> $@
+	@echo '    <key>signingCertificate</key>' >> $@
+	@echo '    <string>$(SIGN_IDENTITY)</string>' >> $@
 	@echo '</dict>' >> $@
 	@echo '</plist>' >> $@
 
@@ -173,7 +184,7 @@ dmg: staple
 		$(DMG_PATH)
 	@rm -rf $(BUILD_DIR)/dmg-staging
 	@echo "Signing DMG..."
-	codesign --force --sign "Developer ID Application" $(DMG_PATH)
+	codesign --force --sign "$(SIGN_IDENTITY)" --timestamp $(DMG_PATH)
 	@echo "DMG created: $(DMG_PATH)"
 
 # Full release pipeline
