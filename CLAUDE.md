@@ -192,10 +192,13 @@ different name and bundle ID (KI-004).
 that satisfies its own designated requirement. Verify with `codesign --verify --strict -vv`
 and confirm `Timestamp=` is present — notarization rejects builds without one.
 
-**Notarization is not yet wired.** `make notarize` needs a stored keychain profile that does not
-exist (`xcrun notarytool history --keychain-profile RedButtonQuit` → "No Keychain password item
-found"). Creating it requires an Apple ID plus an app-specific password, which only BOSS can
-generate and enter — set `NOTARY_PROFILE` in the Makefile once it exists.
+**Notarization is not yet wired.** `make notarize` needs a keychain profile named
+`RedButtonQuit` that does not exist yet (`xcrun notarytool history --keychain-profile
+RedButtonQuit` → "No Keychain password item found"). Creating it requires an app-specific
+password that only the account holder can generate and type — never handle that value. Once the
+profile exists, uncomment `NOTARY_PROFILE = RedButtonQuit` in the Makefile.
+
+This repo is **public**. Keep the Apple ID out of it; it is recorded in agent memory instead.
 
 ## Post-Build Protocol
 

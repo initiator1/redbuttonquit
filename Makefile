@@ -25,7 +25,7 @@ ZIP_PATH = $(BUILD_DIR)/$(APP_NAME).zip
 # Notarization (set these in environment or .env file)
 # APPLE_ID = your@email.com
 # TEAM_ID = XXXXXXXXXX
-# NOTARY_PROFILE = RedButtonQuit
+NOTARY_PROFILE = RedButtonQuit
 
 # Versioning
 VERSION := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" $(APP_NAME)/Supporting/Info.plist 2>/dev/null || echo "1.0.0")
