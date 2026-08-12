@@ -19,7 +19,7 @@ BUILD_DIR = build
 ARCHIVE_PATH = $(BUILD_DIR)/$(APP_NAME).xcarchive
 EXPORT_PATH = $(BUILD_DIR)/export
 APP_PATH = $(EXPORT_PATH)/$(APP_NAME).app
-DMG_PATH = $(BUILD_DIR)/$(APP_NAME).dmg
+DMG_PATH = $(BUILD_DIR)/$(APP_NAME)-$(VERSION).dmg
 ZIP_PATH = $(BUILD_DIR)/$(APP_NAME).zip
 
 # Signing. Two Developer ID certs share team MDWFZC6396 (Douglas Baker and INITIATOR LLC), so
