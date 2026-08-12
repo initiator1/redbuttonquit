@@ -185,6 +185,16 @@ dmg: staple
 	@rm -rf $(BUILD_DIR)/dmg-staging
 	@echo "Signing DMG..."
 	codesign --force --sign "$(SIGN_IDENTITY)" --timestamp $(DMG_PATH)
+	@# The disk image needs its own notarization ticket. Stapling only the app inside is not
+	@# enough — Gatekeeper checks the downloaded .dmg itself, and an unnotarized image warns
+	@# the user before they ever reach the app.
+	@echo "Notarizing DMG..."
+	xcrun notarytool submit $(DMG_PATH) \
+		--keychain-profile "$(NOTARY_PROFILE)" \
+		--wait
+	xcrun stapler staple $(DMG_PATH)
+	@echo "Verifying..."
+	@syspolicy_check distribution $(DMG_PATH) || true
 	@echo "DMG created: $(DMG_PATH)"
 
 # Full release pipeline
