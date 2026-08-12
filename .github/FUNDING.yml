@@ -1,0 +1,5 @@
+# Shows a "Sponsor" button on the repository.
+#
+# This activates automatically once the GitHub Sponsors listing for initiator1
+# is approved. Until then GitHub ignores it and no button appears.
+github: [initiator1]
