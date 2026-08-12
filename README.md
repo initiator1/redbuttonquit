@@ -97,10 +97,10 @@ RedButtonQuit requires Accessibility permission to detect when you close windows
 - Log your activity
 - Access your files
 
-The app is code-signed with a Developer ID certificate issued to INITIATOR LLC. Apple
-[notarization](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution)
-is set up in the build but has not been run yet — the first published binary will be notarized
-before release.
+The app is code-signed with a Developer ID certificate issued to INITIATOR LLC and
+[notarized by Apple](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution),
+which scans it for malicious content. Every released build is notarized and stapled, so it opens
+without a Gatekeeper warning.
 
 ## Why Not the Mac App Store?
 

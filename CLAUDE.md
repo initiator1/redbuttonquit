@@ -192,11 +192,13 @@ different name and bundle ID (KI-004).
 that satisfies its own designated requirement. Verify with `codesign --verify --strict -vv`
 and confirm `Timestamp=` is present — notarization rejects builds without one.
 
-**Notarization is not yet wired.** `make notarize` needs a keychain profile named
-`RedButtonQuit` that does not exist yet (`xcrun notarytool history --keychain-profile
-RedButtonQuit` → "No Keychain password item found"). Creating it requires an app-specific
-password that only the account holder can generate and type — never handle that value. Once the
-profile exists, uncomment `NOTARY_PROFILE = RedButtonQuit` in the Makefile.
+**Notarization works.** `make notarize` submits through the keychain profile `RedButtonQuit`,
+created by BOSS on 2026-08-11. First accepted submission: `765ffb63-7a0e-4d88-b68b-0e295974bab2`.
+`make staple` attaches the ticket. Confirm the result with `syspolicy_check distribution
+<app>` — `spctl` is blocked by the `redline_guard.py` hook because it can disable Gatekeeper.
+
+If the profile ever needs recreating, that requires an app-specific password only the account
+holder can generate and type — **never handle that value**.
 
 This repo is **public**. Keep the Apple ID out of it; it is recorded in agent memory instead.
 
