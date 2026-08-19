@@ -60,6 +60,133 @@ registrant of record, which is a Change of Registrant and can start a
 **60-day inter-registrar transfer lock**. Real details go on the domain at
 Cloudflare, after the transfer, where privacy is free.
 
+## The website: built, not yet deployed
+
+Built 2026-08-19 and on `main` at `site/`. One static `index.html`, no build step,
+no framework. Its own contracts live in [site/CLAUDE.md](site/CLAUDE.md).
+
+### Hosting: Cloudflare Pages, not NFSN
+
+Decided 2026-08-19 after checking both live.
+
+- **Cloudflare Pages free plan: $0/month, no traffic charge.** Verified against
+  Cloudflare's own docs: 500 builds a month, 20,000 files a site, 25 MiB a file,
+  100 custom domains a project. This site is 3 files.
+- **NFSN charges $0.01/day for a non-production site** — a fixed ~$3.65/year
+  before any bandwidth or storage. Cheap, but not free, and it is a second place
+  to log into.
+- The domain is moving to Cloudflare anyway, so Pages puts DNS, TLS, and hosting
+  behind one login, with git-connected deploys straight from this repo.
+
+### Deploy steps, when the domain move is done (BOSS's login)
+
+1. Cloudflare → Workers & Pages → Create → Pages → Connect to Git →
+   `initiator1/redbuttonquit`.
+2. Framework preset **None**. Build command **empty**. Output directory **`site`**.
+3. After the first deploy: Custom domains → add `redbuttonquit.com` and `www`.
+
+**Order matters.** The quit-history section on the page describes a shipped
+feature, so the site should go live with or after the release that contains it.
+
+### The app already links to two dead URLs
+
+Both are live in v1.0.0 right now, in Preferences → About:
+
+- `https://redbuttonquit.com` — resolves to nothing until the site is deployed.
+- `https://ko-fi.com/initiator1` — **does not exist.** Checked 2026-08-19: it
+  redirects to Ko-fi's home page. "Buy me a coffee" currently goes nowhere.
+  Needs BOSS's call: claim that Ko-fi username, or wait for GitHub Sponsors
+  (parked on the CPA question), or remove the link.
+
+The site deliberately ships no donation button until that is decided.
+
+### Related placement decision
+
+`ai-initiator/PRODUCT-LAB-PLACEMENT-RULE.md` puts RedButtonQuit on the
+AI-Initiator Product Lab under "More Apps", linking to GitHub releases. BOSS
+decided 2026-08-19 that the Product Lab should link to the website instead.
+That rule file still says GitHub releases and needs updating when the site
+is live.
+
+## Release v1.1 is needed to ship the quit history
+
+The feature is on `main` and installed locally, but the public release is still
+v1.0.0 from 2026-08-12. Until `make release-full` runs and a v1.1 release is
+published, anyone downloading the DMG gets an app without the History tab.
+
+## Not visually verified
+
+Checked on the installed app 2026-08-19: the History tab with one real entry,
+after fixing a list style that painted blank grey rows. **Not** rendered and
+looked at: the empty state, the Quits filter, and the Near misses filter — UI
+automation could not switch the segmented control. Look at those before release.
+
+Codex reported "Native History tab: inspected. Both connected displays:
+checked." Its two screenshots show BOSS's desktop, not the app. Treat that
+class of claim as unverified.
+
+## App icon draws its own rounded tile
+
+Noted 2026-08-19. `icon_512x512.png` is a dark rounded square drawn inside the
+image. macOS already masks app icons to a squircle, so the artwork gets rounded
+twice. House preference is a full-bleed single tile with no nested tile. Worth
+regenerating before the next release; not urgent.
+
+## Quit history validation after review
+
+Added 2026-08-19. The quit history change is uncommitted on
+`feature/quit-history`.
+
+- Run one installed-app check before release. Exclude a normal app, close its
+  last window, and confirm the app stays open. Then remove the exclusion and
+  confirm history changes from `Quitting…` to `Quit` only after termination.
+- The automated store tests cover persistence and outcomes. A handler unit test
+  needs a mock `NSRunningApplication` or termination seam. The feature brief
+  forbids adding that seam for this change.
+
+## The domain: redbuttonquit.com — suspension CLEARED, now an empty zone
+
+**Verified live 2026-08-19 against the registry and NFSN's nameservers.** This
+replaces the 2026-08-14 entry, which said the verification had failed.
+
+- **The Whois verification did go through.** Registry `Updated Date` is
+  `2026-08-14T11:00:09Z` — about fifteen minutes after the last check said it
+  had not taken. Nameservers are now the real `ns.phx1` / `ns.phx5
+  .nearlyfreespeech.net`, not the `VERIFICATION-HOLD.SUSPENDED-DOMAIN.COM`
+  parking pair.
+- **The NFSN support mail was never needed and must not be sent.** The draft
+  in the earlier version of this file is dead. Do not send it.
+- **The zone answers but is empty.** SOA resolves from NFSN. There is no A,
+  no www, no MX, no TXT. The domain resolves to nothing because nothing has
+  been put in it, which is a different problem from being switched off.
+- `clientTransferProhibited` is set. That is the ordinary registrar lock, not
+  a penalty — it is step 5 of the move below.
+
+### The clock — unchanged and still the real risk
+
+Expires **2026-12-29**, renewal type **Manual**. 132 days left as of
+2026-08-19. It will not renew itself. Estimated deletion 2027-03-14 if it
+lapses. The Cloudflare transfer fixes this permanently: it adds a year (to
+2027-12-29) and turns on auto-renew.
+
+### The Cloudflare move is now unblocked — every step is BOSS's login
+
+1. Cloudflare → Add a site → redbuttonquit.com → Free plan.
+2. Copy the two nameservers Cloudflare assigns.
+3. NFSN `/domains` → the domain → set nameservers to Cloudflare's two.
+4. Wait for Cloudflare to report the zone **Active** (it emails).
+5. NFSN: Unlock Domain.
+6. NFSN: request the auth/EPP code.
+7. Cloudflare → Domain Registration → Transfer Domains → enter the code.
+   Up to 5 business days.
+
+### Standing warning — still live
+
+**Never use NFSN's "Remove RespectMyPrivacy" action.** It changes the
+registrant of record, which is a Change of Registrant and can start a
+**60-day inter-registrar transfer lock**. Real details go on the domain at
+Cloudflare, after the transfer, where privacy is free.
+
 ## The website: none exists, and there is a placement decision already made
 
 Checked 2026-08-19. There is no site, no landing page, and no `docs/` branch
