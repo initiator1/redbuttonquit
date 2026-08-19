@@ -108,11 +108,41 @@ decided 2026-08-19 that the Product Lab should link to the website instead.
 That rule file still says GitHub releases and needs updating when the site
 is live.
 
-## Release v1.1 is needed to ship the quit history
+## v1.1.0 is released
 
-The feature is on `main` and installed locally, but the public release is still
-v1.0.0 from 2026-08-12. Until `make release-full` runs and a v1.1 release is
-published, anyone downloading the DMG gets an app without the History tab.
+Published 2026-08-19: https://github.com/initiator1/redbuttonquit/releases/tag/v1.1.0
+
+Signed by INITIATOR LLC, notarization submission
+`15ba6ef8-cc81-4556-b5b8-b1ef06871e33` accepted, app and DMG both stapled,
+`syspolicy_check distribution` passes. Verified by downloading the DMG from the
+public URL and confirming the ticket survived the round trip. Installed locally
+and confirmed working: TextEdit quit on last-window close and was recorded.
+
+## Ko-fi is live
+
+Page: **ko-fi.com/initiatorworks**, claimed 2026-08-19. Stripe connected,
+Delaware ZIP matching the Stripe account, tips at 0% platform fee ("Get all of
+Ko-fi" left off deliberately — turning it on costs 5% of every tip).
+
+- The app's "Buy me a coffee" link is fixed in v1.1.0.
+- The website's support section now links to it.
+- The old `ko-fi.com/initiator1` never existed and shipped dead in v1.0.0.
+  Anyone still on v1.0.0 has a dead link until they update.
+
+**Still open:** add the Ko-fi link to the other three apps (unstray,
+timeannouncer, portmanager). None of them carries it, so one page is collecting
+for four apps while only one points at it.
+
+**Verify before relying on it:** `support@initiatorworks.com` is printed in the
+Ko-fi auto thank-you message. Confirm it actually delivers mail.
+
+## redbuttonquit.com is still dead, and the app links to it
+
+Preferences → About has a "Website" link to `https://redbuttonquit.com`, which
+resolves to nothing until the Cloudflare move and the Pages deploy are done.
+That link shipped dead in v1.0.0 and is still dead in v1.1.0. It was left in
+deliberately rather than removed, because the site is built and waiting — but
+it stays a broken promise until the domain move happens.
 
 ## Not visually verified
 

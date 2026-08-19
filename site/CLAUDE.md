@@ -37,9 +37,10 @@ against the shipped app, not against the README:
 - **No Homebrew instructions.** The cask does not exist — `brew info --cask redbuttonquit`
   returned "No Cask with this name exists" on 2026-08-19. Add the section when the cask is
   actually accepted.
-- **No donation button without a live destination.** `ko-fi.com/initiator1` does not exist; it
-  redirects to Ko-fi's home page. The support section deliberately offers only a GitHub star,
-  and its copy asks for nothing more.
+- **No donation button without a live destination.** The page is `ko-fi.com/initiatorworks`,
+  claimed 2026-08-19 and live. The earlier `ko-fi.com/initiator1` never existed — it redirected
+  to Ko-fi's home page and shipped dead inside v1.0.0. Check any payment link resolves before
+  putting it on the page.
 - **The quit history section describes a shipped feature.** It ships with the app release that
   contains it. Do not publish the section ahead of the release.
 - Version, size, and requirements in the hero and spec table are hand-written. Update them with
