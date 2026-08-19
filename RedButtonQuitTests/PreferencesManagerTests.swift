@@ -46,6 +46,10 @@ final class PreferencesManagerTests: XCTestCase {
         XCTAssertFalse(sut.hasCompletedOnboarding, "Onboarding should not be completed by default")
     }
 
+    func testDefaultRecordHistory() {
+        XCTAssertTrue(sut.recordHistory, "History recording should be enabled by default")
+    }
+
     // MARK: - System Protected Apps Tests
 
     func testSystemProtectedAppsContainsFinder() {
@@ -163,6 +167,7 @@ final class PreferencesManagerTests: XCTestCase {
         sut.isEnabled = false
         sut.quitMode = .anyWindow
         sut.launchAtLogin = true
+        sut.recordHistory = false
         sut.addExclusion("com.example.testapp")
 
         // Reset
@@ -172,6 +177,7 @@ final class PreferencesManagerTests: XCTestCase {
         XCTAssertTrue(sut.isEnabled)
         XCTAssertEqual(sut.quitMode, .lastWindow)
         XCTAssertFalse(sut.launchAtLogin)
+        XCTAssertTrue(sut.recordHistory)
         XCTAssertFalse(sut.isExcluded(bundleIdentifier: "com.example.testapp"))
     }
 

@@ -58,9 +58,10 @@ Open in Xcode: `open RedButtonQuit.xcodeproj`
 
 ```
 AppDelegate.setupServices()
-  └─ AppTerminationService (no deps)
-       └─ WindowEventHandler (owns terminationService)
-            └─ AccessibilityMonitor (weak ref to eventHandler)
+  ├─ AppTerminationService (no deps)
+  ├─ QuitHistoryStore.shared (file-backed history)
+  └─ WindowEventHandler (owns terminationService and history)
+       └─ AccessibilityMonitor (weak ref to eventHandler)
 ```
 
 All three services are retained by `AppDelegate`. The monitor is the only component that interacts with the OS accessibility layer. `AppDelegate` subscribes to `PreferencesManager.shared.$isEnabled` via Combine to start/stop monitoring dynamically.
@@ -73,10 +74,13 @@ All three services are retained by `AppDelegate`. The monitor is the only compon
 
 1. `AccessibilityMonitor` creates `AXObserver` per running app (`.regular` activation policy only), listens for `kAXUIElementDestroyedNotification` and `kAXWindowCreatedNotification`
 2. Also watches `NSWorkspace` notifications for app launch/terminate to add/remove observers dynamically
-3. On window destruction → `WindowEventHandler.handleWindowDestroyed()` checks: enabled? excluded? quit mode?
+3. On window destruction → `WindowEventHandler.handleWindowDestroyed()` checks: enabled? protected? quit mode?
 4. Both quit modes wait one second for transient fullscreen/playback window replacement; a newly created real `AXWindow` cancels the pending quit
 5. For `lastWindow`, `WindowInspector` requires both Accessibility and CoreGraphics to report zero user-facing windows
-6. If conditions are met → `AppTerminationService.terminateApp()` sends `NSRunningApplication.terminate()` with AppleScript fallback
+6. At the quit decision, the handler checks the current user exclusion list and records excluded decisions
+7. If conditions are met → `AppTerminationService.terminateApp()` sends `NSRunningApplication.terminate()` with AppleScript fallback
+8. `QuitHistoryStore` records the request as pending, then the handler polls `isTerminated` for up to ten seconds
+9. The history reports a quit only after a poll confirms that the app terminated
 
 ### Window Counting
 
@@ -85,12 +89,14 @@ All three services are retained by `AppDelegate`. The monitor is the only compon
 ### Singletons
 
 - `PreferencesManager.shared` — all preferences via `UserDefaults`, `@Published` properties with Combine observation
+- `QuitHistoryStore.shared` — up to 200 local quit decisions in `~/Library/Application Support/RedButtonQuit/history.json`
 - `OnboardingWindowController.shared` — manages the onboarding NSWindow (wraps SwiftUI `OnboardingView` in `NSHostingView`)
 
 ### UI Structure
 
 - **App scene**: `MenuBarExtra` with `.menu` style → `AppMenu` (SwiftUI view rendered as native menu)
-- **Settings**: SwiftUI `Settings` scene → `PreferencesView` (3 tabs: General, Exclusions, About)
+- **Settings**: SwiftUI `Settings` scene → `PreferencesView` (4 tabs: General, Exclusions, History, About)
+- **Recent history**: `AppMenu` shows up to ten confirmed quits, still-running results, or failures
 - **Onboarding**: 6-step wizard shown via `OnboardingWindowController.showIfNeeded()` on first launch (0.5s delay)
 - **Permission polling**: `PermissionChecker` (ObservableObject) polls `isAccessibilityEnabled()` every 0.5s during onboarding permission step
 
@@ -174,6 +180,7 @@ skips the prompt under XCTest so no permission dialog interrupts a test run.
 - The real Finder Accessibility test is skipped when the test host lacks permission; the remaining window-classification tests still run
 - `AppTerminationServiceTests` validates protected apps cannot be terminated (uses real `NSRunningApplication` instances — Finder, Dock)
 - `PreferencesManagerTests` and `AccessibilityMonitorTests` also exist
+- `QuitHistoryStoreTests` use temporary directories and isolated `UserDefaults` suites
 - Real window monitoring tests are difficult to automate; manual testing recommended for accessibility features
 
 ## Code Signing

@@ -21,6 +21,7 @@ final class PreferencesManager: ObservableObject {
         static let launchAtLogin = "com.redbuttonquit.launchAtLogin"
         static let playSound = "com.redbuttonquit.playSound"
         static let hasCompletedOnboarding = "com.redbuttonquit.hasCompletedOnboarding"
+        static let recordHistory = "com.redbuttonquit.recordHistory"
     }
 
     // MARK: - Preferences Tab
@@ -28,6 +29,7 @@ final class PreferencesManager: ObservableObject {
     enum PreferencesTab: String, CaseIterable, Identifiable {
         case general
         case exclusions
+        case history
         case about
 
         var id: String { rawValue }
@@ -89,6 +91,10 @@ final class PreferencesManager: ObservableObject {
         didSet { userDefaults.set(hasCompletedOnboarding, forKey: Keys.hasCompletedOnboarding) }
     }
 
+    @Published var recordHistory: Bool {
+        didSet { userDefaults.set(recordHistory, forKey: Keys.recordHistory) }
+    }
+
     /// Currently selected tab in Preferences (runtime state, not persisted)
     @Published var selectedTab: PreferencesTab = .general
 
@@ -120,7 +126,8 @@ final class PreferencesManager: ObservableObject {
             Keys.excludedBundleIDs: defaultExcluded,
             Keys.launchAtLogin: false,
             Keys.playSound: false,
-            Keys.hasCompletedOnboarding: false
+            Keys.hasCompletedOnboarding: false,
+            Keys.recordHistory: true
         ])
 
         // Load values
@@ -135,6 +142,7 @@ final class PreferencesManager: ObservableObject {
         self.launchAtLogin = userDefaults.bool(forKey: Keys.launchAtLogin)
         self.playSound = userDefaults.bool(forKey: Keys.playSound)
         self.hasCompletedOnboarding = userDefaults.bool(forKey: Keys.hasCompletedOnboarding)
+        self.recordHistory = userDefaults.bool(forKey: Keys.recordHistory)
     }
 
     // MARK: - Public Methods
@@ -167,6 +175,7 @@ final class PreferencesManager: ObservableObject {
         excludedBundleIDs = Self.systemProtectedApps
         launchAtLogin = false
         playSound = false
+        recordHistory = true
     }
 
     // MARK: - Login Item Management

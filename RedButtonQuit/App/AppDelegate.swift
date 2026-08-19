@@ -49,7 +49,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupServices() {
         let terminationService = AppTerminationService()
-        let eventHandler = WindowEventHandler(terminationService: terminationService)
+        let eventHandler = WindowEventHandler(
+            terminationService: terminationService,
+            history: .shared
+        )
         let monitor = AccessibilityMonitor(eventHandler: eventHandler)
 
         self.appTerminationService = terminationService

@@ -18,13 +18,19 @@ struct PreferencesView: View {
                 }
                 .tag(PreferencesManager.PreferencesTab.exclusions)
 
+            HistoryView()
+                .tabItem {
+                    Label("History", systemImage: "clock.arrow.circlepath")
+                }
+                .tag(PreferencesManager.PreferencesTab.history)
+
             AboutTab()
                 .tabItem {
                     Label("About", systemImage: "info.circle")
                 }
                 .tag(PreferencesManager.PreferencesTab.about)
         }
-        .frame(width: 450, height: 450)
+        .frame(width: 560, height: 500)
     }
 }
 

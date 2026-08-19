@@ -3,6 +3,7 @@ import SwiftUI
 /// The main menu displayed in the menu bar
 struct AppMenu: View {
     @ObservedObject private var preferences = PreferencesManager.shared
+    @ObservedObject private var history = QuitHistoryStore.shared
     @Environment(\.openSettings) private var openSettings
 
     var body: some View {
@@ -30,6 +31,27 @@ struct AppMenu: View {
                             Image(systemName: "checkmark")
                         }
                     }
+                }
+            }
+        }
+
+        if preferences.recordHistory {
+            Menu("Recent") {
+                if recentEvents.isEmpty {
+                    Button("No quits recorded yet") {}
+                        .disabled(true)
+                } else {
+                    ForEach(recentEvents) { event in
+                        Button(recentText(for: event)) {}
+                            .disabled(true)
+                    }
+                }
+
+                Divider()
+
+                Button("Open History…") {
+                    preferences.selectedTab = .history
+                    openSettings()
                 }
             }
         }
@@ -85,6 +107,32 @@ struct AppMenu: View {
             return "Permission Required"
         }
         return preferences.isEnabled ? "Active" : "Disabled"
+    }
+
+    private var recentEvents: [QuitEvent] {
+        Array(history.events.filter {
+            [.quit, .stillRunning, .failed].contains($0.outcome)
+        }.prefix(10))
+    }
+
+    private func recentText(for event: QuitEvent) -> String {
+        switch event.outcome {
+        case .quit:
+            return "\(event.appName) — \(recentDate(event.date))"
+        case .stillRunning:
+            return "\(event.appName) — still running"
+        case .failed:
+            return "\(event.appName) — failed"
+        case .pending, .cancelled, .skippedExcluded:
+            return event.appName
+        }
+    }
+
+    private func recentDate(_ date: Date) -> String {
+        if Calendar.current.isDateInToday(date) {
+            return date.formatted(date: .omitted, time: .shortened)
+        }
+        return date.formatted(date: .abbreviated, time: .shortened)
     }
 
 }

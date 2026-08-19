@@ -167,7 +167,7 @@ Since we cannot use App Store automatic updates, we must implement:
 | Per-App Delay | Wait X seconds before quitting (in case of accidental close) | P1 |
 | Undo Quit | Brief grace period to undo an auto-quit | P1 |
 | Notification Option | Optional notification when an app is auto-quit | P2 |
-| Statistics | Track how many times the feature triggered | P2 |
+| Quit History | Delivered. Local history records confirmed quits and near misses. It replaces the planned trigger counter. | P2 |
 | Keyboard Shortcut | Quick toggle via global hotkey | P2 |
 
 ### Non-Features (Explicitly Out of Scope)

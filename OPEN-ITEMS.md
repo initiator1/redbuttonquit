@@ -5,6 +5,18 @@ before archiving it. The app itself is SHIPPED: v1.0.0 is live on GitHub,
 notarized, verified by downloading from the public URL and checking the
 notarization ticket survived the round trip.
 
+## Quit history validation after review
+
+Added 2026-08-19. The quit history change is uncommitted on
+`feature/quit-history`.
+
+- Run one installed-app check before release. Exclude a normal app, close its
+  last window, and confirm the app stays open. Then remove the exclusion and
+  confirm history changes from `Quitting…` to `Quit` only after termination.
+- The automated store tests cover persistence and outcomes. A handler unit test
+  needs a mock `NSRunningApplication` or termination seam. The feature brief
+  forbids adding that seam for this change.
+
 ## The domain: redbuttonquit.com — suspension CLEARED, now an empty zone
 
 **Verified live 2026-08-19 against the registry and NFSN's nameservers.** This

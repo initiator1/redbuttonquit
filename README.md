@@ -14,8 +14,6 @@ On macOS, clicking the red close button only closes the window—the app keeps r
 
 **RedButtonQuit changes this behavior.** When you close the last window of an app, RedButtonQuit automatically quits the app for you.
 
-![Demo](docs/demo.gif)
-
 ## Features
 
 - **Automatic app quitting** - Close the last window, and the app quits
@@ -24,6 +22,7 @@ On macOS, clicking the red close button only closes the window—the app keeps r
   - *Last Window* - Only quit when the last window closes (default)
   - *Any Window* - Quit whenever any window closes
 - **Menu bar app** - Runs quietly in your menu bar
+- **Quit history** - Shows confirmed quits and near misses on this Mac
 - **Launch at login** - Start automatically when you log in
 - **Zero data collection** - Your privacy is respected
 
@@ -35,12 +34,6 @@ On macOS, clicking the red close button only closes the window—the app keeps r
 2. Open the DMG and drag RedButtonQuit to your Applications folder
 3. Launch RedButtonQuit from Applications
 4. Grant Accessibility permission when prompted
-
-### Homebrew
-
-```bash
-brew install --cask redbuttonquit
-```
 
 ### Building from Source
 
@@ -66,8 +59,20 @@ open RedButtonQuit.xcodeproj
 Click the menu bar icon to:
 - Enable/disable RedButtonQuit
 - Change quit mode
+- Review recent confirmed quits and failures
 - Access excluded apps
 - Open preferences
+
+### Quit History
+
+Open **Recent → Open History…** from the menu bar.
+
+The History tab shows RedButtonQuit's own quit decisions. It confirms that an app stopped
+before it marks the event as a quit. It also shows cancelled quits, excluded apps, failures,
+and apps that stayed open.
+
+History recording is on by default. You can turn it off or clear all entries in the History
+tab. Existing entries remain until you clear them.
 
 ### Adding Exclusions
 
@@ -91,10 +96,12 @@ To exclude an app:
 
 RedButtonQuit requires Accessibility permission to detect when you close windows. This is the only way to implement this functionality on macOS.
 
+Quit history stays in `~/Library/Application Support/RedButtonQuit/history.json`.
+
 **We do not:**
 - Collect any data
-- Send any network requests (except for update checks)
-- Log your activity
+- Send any network requests — the app contains no networking code
+- Record quits that you start with Cmd-Q or an app's Quit menu item
 - Access your files
 
 The app is code-signed with a Developer ID certificate issued to INITIATOR LLC and
@@ -133,6 +140,7 @@ Most apps work correctly. Some apps with unusual window management (certain game
 1. Quit RedButtonQuit from the menu bar
 2. Delete RedButtonQuit.app from Applications
 3. (Optional) Remove preferences: `defaults delete com.redbuttonquit.app`
+4. (Optional) Remove local quit history: `rm -f "$HOME/Library/Application Support/RedButtonQuit/history.json"`
 
 ### RedButtonQuit isn't listed under Accessibility, or I deleted its entry
 
