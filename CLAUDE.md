@@ -209,6 +209,12 @@ holder can generate and type — **never handle that value**.
 
 This repo is **public**. Keep the Apple ID out of it; it is recorded in agent memory instead.
 
+## Child DOX Index
+
+| Subtree | Owner doc | Covers |
+| --- | --- | --- |
+| `site/` | [site/CLAUDE.md](site/CLAUDE.md) | The public marketing site at redbuttonquit.com: no-build contract, design direction, the claims that must be verified before they go on the page, and Cloudflare Pages deployment. |
+
 ## Post-Build Protocol
 
 **Install with `make install`, never by copying the bundle into `/Applications` yourself.** It

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RedButtonQuit — close the last window, the app quits</title>
+<meta name="description" content="A free, open-source macOS menu bar utility. Close an app's last window and RedButtonQuit quits it for you — then shows you exactly what it did.">
+<link rel="icon" href="icon-128.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-512.png">
+<meta property="og:title" content="RedButtonQuit">
+<meta property="og:description" content="Close the last window. The app quits. A free, open-source macOS utility.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://redbuttonquit.com/">
+<meta property="og:image" content="https://redbuttonquit.com/icon-512.png">
+<meta name="theme-color" content="#0E1012">
+<script>document.documentElement.className="js";</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#0E1012;
+  --panel:#16191C;
+  --panel-hi:#1D2126;
+  --etch:#2B3138;
+  --etch-lit:#3A424A;
+  --bone:#E9E5DD;
+  --bone-dim:#98A0A8;
+  --bone-faint:#6B737B;
+  --red:#FF5F57;
+  --amber:#FEBC2E;
+  --green:#28C840;
+  --paper:#E9E5DD;
+  --ink:#15181B;
+  --ink-dim:#5A6169;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
+  --shell:min(1120px,calc(100% - 3rem));
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--void);
+  color:var(--bone);
+  font-family:"Outfit",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  font-weight:300;
+  font-size:17px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block}
+a{color:inherit}
+
+/* ---------- shared type ---------- */
+.display{
+  /* House scale: large display type is Outfit Thin. Weight is carried by size
+     and spacing, never by heaviness. */
+  font-family:"Outfit",-apple-system,system-ui,sans-serif;
+  font-weight:100;
+  line-height:1.04;
+  letter-spacing:-.012em;
+  margin:0;
+}
+.silk{
+  font-family:var(--mono);
+  font-size:.6875rem;
+  letter-spacing:.24em;
+  text-transform:uppercase;
+  color:var(--bone-faint);
+  margin:0 0 1.75rem;
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+.silk::after{
+  content:"";
+  flex:1;
+  height:1px;
+  background:linear-gradient(90deg,var(--etch),transparent);
+}
+.lede{color:var(--bone-dim);max-width:56ch;margin:1.25rem 0 0}
+
+/* ---------- layout ---------- */
+.wrap{width:var(--shell);margin-inline:auto}
+.band{padding:clamp(4.5rem,9vw,8rem) 0;border-top:1px solid var(--etch)}
+.band--first{border-top:0;padding-top:clamp(2rem,5vw,3.5rem)}
+
+/* ---------- masthead ---------- */
+.mast{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;padding:1.5rem 0;
+}
+.mark{display:flex;align-items:center;gap:.7rem;text-decoration:none}
+.mark img{width:30px;height:30px;border-radius:7px}
+.mark span{
+  font-family:var(--mono);font-size:.75rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--bone);
+}
+.mast nav{display:flex;gap:1.6rem;font-size:.875rem;color:var(--bone-dim)}
+.mast nav a{text-decoration:none}
+.mast nav a:hover{color:var(--bone)}
+
+/* ---------- hero ---------- */
+.hero{display:grid;gap:clamp(2.5rem,5vw,4rem);grid-template-columns:1fr;align-items:center}
+@media(min-width:920px){.hero{grid-template-columns:1.02fr .98fr}}
+.hero h1{font-size:clamp(2.9rem,6.8vw,4.55rem)}
+.hero h1 em{font-style:normal;color:var(--red);font-weight:200}
+.hero .lede{font-size:1.0625rem}
+
+.actions{display:flex;flex-wrap:wrap;gap:.9rem;align-items:center;margin-top:2.25rem}
+.btn{
+  display:inline-flex;align-items:center;gap:.6rem;
+  padding:.85rem 1.4rem;border-radius:10px;
+  font-family:"Outfit",sans-serif;font-size:.95rem;font-weight:400;
+  text-decoration:none;border:1px solid transparent;
+  transition:transform .16s ease,background .16s ease,border-color .16s ease;
+}
+.btn--go{background:var(--red);color:#25100E;box-shadow:0 10px 30px -14px var(--red)}
+.btn--go:hover{transform:translateY(-2px);background:#FF7169}
+.btn--ghost{border-color:var(--etch-lit);color:var(--bone-dim)}
+.btn--ghost:hover{border-color:var(--bone-faint);color:var(--bone)}
+.meta{font-family:var(--mono);font-size:.72rem;color:var(--bone-faint);letter-spacing:.06em}
+
+/* ---------- the instrument ---------- */
+.rig{position:relative}
+.rig::before{
+  content:"";position:absolute;inset:-14% -8% 22%;
+  background:radial-gradient(60% 55% at 50% 45%,var(--red) 0%,transparent 70%);
+  opacity:.1;filter:blur(46px);pointer-events:none;
+}
+.stage{
+  position:relative;min-height:264px;
+  display:flex;align-items:center;justify-content:center;
+  padding:1.25rem;
+}
+.win{
+  width:100%;max-width:420px;
+  background:linear-gradient(178deg,var(--panel-hi),var(--panel));
+  border:1px solid var(--etch);border-radius:12px;
+  box-shadow:0 34px 70px -30px #000,0 0 0 1px rgba(255,255,255,.02) inset;
+  overflow:hidden;
+  transform-origin:50% 60%;
+  transition:opacity .28s ease,transform .28s cubic-bezier(.4,0,.7,.2),filter .28s ease;
+}
+.win.is-closing{opacity:0;transform:scale(.94);filter:blur(3px)}
+.win.is-gone{display:none}
+.chrome{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.7rem .85rem;border-bottom:1px solid var(--etch);
+  background:rgba(255,255,255,.015);
+}
+.light{width:12px;height:12px;border-radius:50%;flex:none;display:block}
+.light--amber{background:var(--amber)}
+.light--green{background:var(--green)}
+.shut{
+  width:12px;height:12px;border-radius:50%;flex:none;
+  background:var(--red);border:0;padding:0;cursor:pointer;
+  position:relative;
+  transition:transform .14s ease,box-shadow .14s ease;
+}
+.shut::after{
+  content:"×";position:absolute;inset:0;
+  font-size:11px;line-height:12px;color:#5C1410;
+  opacity:0;transition:opacity .14s ease;
+}
+.chrome:hover .shut::after,.shut:focus-visible::after{opacity:1}
+.shut:hover{transform:scale(1.16)}
+.shut:focus-visible{outline:2px solid var(--bone);outline-offset:3px}
+.win-title{
+  flex:1;text-align:center;font-size:.78rem;color:var(--bone-dim);
+  margin-right:34px;font-weight:400;
+}
+.win-body{padding:1.35rem 1.1rem 1.6rem}
+.skel{height:9px;border-radius:5px;background:var(--etch);margin-bottom:.7rem}
+.skel:nth-child(1){width:72%}
+.skel:nth-child(2){width:94%}
+.skel:nth-child(3){width:61%}
+.skel:nth-child(4){width:83%;margin-bottom:0}
+
+.nudge{
+  /* The hint only tells the truth when the script that handles the click is
+     running, so it stays hidden on a page with JavaScript blocked. */
+  display:none;
+  position:absolute;left:50%;bottom:.35rem;transform:translateX(-50%);
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--bone-faint);
+  transition:opacity .3s ease;white-space:nowrap;
+}
+.js .nudge{display:block}
+.nudge.is-hidden{opacity:0}
+.relaunch{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:100%;max-width:420px;min-height:158px;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;border:1px dashed var(--etch);border-radius:12px;
+  color:var(--bone-faint);font-family:var(--mono);font-size:.72rem;
+  letter-spacing:.14em;text-transform:uppercase;
+  padding:1rem;cursor:pointer;opacity:0;pointer-events:none;
+  transition:opacity .34s ease .12s,border-color .16s ease,color .16s ease;
+}
+.relaunch.is-shown{opacity:1;pointer-events:auto}
+.relaunch:hover{border-color:var(--bone-faint);color:var(--bone)}
+
+/* ---------- recorder ---------- */
+.recorder{
+  margin-top:1.5rem;border:1px solid var(--etch);border-radius:12px;
+  background:var(--panel);overflow:hidden;
+}
+.recorder-head{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.6rem .95rem;border-bottom:1px solid var(--etch);
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--bone-faint);
+}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--green);flex:none}
+.tape{margin:0;padding:.8rem .95rem;min-height:104px;list-style:none;font-family:var(--mono);font-size:.8rem}
+.tape li{
+  display:flex;justify-content:space-between;gap:1rem;
+  padding:.3rem 0;color:var(--bone);
+  animation:print .34s ease both;
+}
+.tape li span:last-child{color:var(--bone-faint)}
+.tape-empty{color:var(--bone-faint);padding:.3rem 0;font-family:var(--mono);font-size:.8rem}
+@keyframes print{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+
+/* ---------- the gap ---------- */
+.gap-grid{display:grid;gap:1px;background:var(--etch);border:1px solid var(--etch);border-radius:14px;overflow:hidden}
+@media(min-width:760px){.gap-grid{grid-template-columns:1fr 1fr}}
+.gap-cell{background:var(--panel);padding:clamp(1.6rem,3.4vw,2.4rem)}
+.gap-cell h3{
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--bone-faint);margin:0 0 1.1rem;font-weight:400;
+}
+.flow{display:flex;flex-direction:column;gap:.55rem;font-size:.95rem}
+.flow b{font-weight:400;color:var(--bone)}
+.flow .arrow{color:var(--bone-faint);font-family:var(--mono);font-size:.8rem}
+.flow .out{color:var(--bone-dim)}
+.gap-cell--after .out{color:var(--red)}
+
+/* ---------- sequence ---------- */
+.seq{display:grid;gap:clamp(1.5rem,3vw,2.5rem);counter-reset:step}
+@media(min-width:820px){.seq{grid-template-columns:repeat(3,1fr)}}
+.step{border-top:1px solid var(--etch);padding-top:1.4rem}
+.step::before{
+  counter-increment:step;content:counter(step,decimal-leading-zero);
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;color:var(--red);
+  display:block;margin-bottom:.9rem;
+}
+.step h3{
+  font-family:"Outfit",sans-serif;font-weight:200;
+  font-size:1.45rem;margin:0 0 .7rem;letter-spacing:-.008em;
+}
+.step p{margin:0;color:var(--bone-dim);font-size:.95rem}
+
+/* ---------- record (paper inversion) ---------- */
+.paper{background:var(--paper);color:var(--ink);border-top:1px solid var(--etch)}
+.paper .silk{color:var(--ink-dim)}
+.paper .silk::after{background:linear-gradient(90deg,rgba(0,0,0,.22),transparent)}
+.paper h2{font-size:clamp(2rem,4.6vw,3rem)}
+.paper .lede{color:var(--ink-dim)}
+.record-grid{display:grid;gap:clamp(2rem,4vw,3.5rem);align-items:start}
+@media(min-width:900px){.record-grid{grid-template-columns:.92fr 1.08fr}}
+.ledger{
+  background:#F4F1EB;border:1px solid rgba(0,0,0,.14);border-radius:12px;
+  box-shadow:0 22px 44px -30px rgba(0,0,0,.55);overflow:hidden;
+}
+.ledger-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.75rem 1rem;border-bottom:1px solid rgba(0,0,0,.12);
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-dim);
+}
+.ledger-row{display:flex;align-items:center;gap:.85rem;padding:.8rem 1rem;border-bottom:1px solid rgba(0,0,0,.07)}
+.ledger-row:last-child{border-bottom:0}
+.glyph{
+  width:26px;height:26px;border-radius:6px;flex:none;
+  display:grid;place-items:center;font-size:.7rem;font-weight:500;
+  background:rgba(0,0,0,.07);color:var(--ink-dim);
+}
+.ledger-row div{flex:1;min-width:0}
+.ledger-row strong{display:block;font-weight:400;font-size:.95rem}
+.ledger-row small{color:var(--ink-dim);font-size:.78rem}
+.stamp{
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
+  padding:.2rem .5rem;border-radius:5px;white-space:nowrap;
+}
+.stamp--quit{background:rgba(255,95,87,.16);color:#A62B24}
+.stamp--near{background:rgba(0,0,0,.06);color:var(--ink-dim)}
+.ledger-foot{padding:.7rem 1rem;font-family:var(--mono);font-size:.66rem;color:var(--ink-dim);border-top:1px solid rgba(0,0,0,.12)}
+.paper ul.plain{list-style:none;padding:0;margin:1.75rem 0 0;display:grid;gap:1rem}
+.paper ul.plain li{display:flex;gap:.85rem;align-items:baseline;font-size:.97rem}
+.paper ul.plain b{font-weight:400}
+.tick{color:var(--red);font-family:var(--mono);font-size:.85rem;flex:none}
+
+/* ---------- spec sheet ---------- */
+.spec{width:100%;border-collapse:collapse;font-size:.95rem}
+.spec tr{border-top:1px solid var(--etch)}
+.spec tr:first-child{border-top:0}
+.spec th{
+  text-align:left;font-family:var(--mono);font-size:.7rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--bone-faint);font-weight:400;
+  padding:1rem 1.5rem 1rem 0;vertical-align:top;width:min(38%,15rem);
+}
+.spec td{padding:1rem 0;color:var(--bone);font-weight:300}
+.spec td em{font-style:normal;color:var(--red)}
+
+/* ---------- install ---------- */
+.install{display:grid;gap:clamp(1.4rem,3vw,2.2rem)}
+@media(min-width:820px){.install{grid-template-columns:repeat(4,1fr)}}
+.install div{border-top:1px solid var(--etch);padding-top:1.2rem}
+.install h3{font-size:1.1rem;font-weight:200;margin:0 0 .5rem;font-family:"Outfit",sans-serif}
+.install p{margin:0;color:var(--bone-dim);font-size:.9rem}
+.install span{font-family:var(--mono);font-size:.7rem;color:var(--red);letter-spacing:.16em;display:block;margin-bottom:.8rem}
+
+/* ---------- support ---------- */
+.support{
+  border:1px solid var(--etch);border-radius:14px;background:var(--panel);
+  padding:clamp(2rem,4.5vw,3.2rem);
+  display:grid;gap:1.75rem;align-items:center;
+}
+@media(min-width:820px){.support{grid-template-columns:1.25fr .75fr}}
+.support h2{font-size:clamp(1.7rem,3.4vw,2.3rem)}
+.support p{margin:.9rem 0 0;color:var(--bone-dim);max-width:48ch}
+.support .actions{margin-top:0}
+
+/* ---------- footer ---------- */
+.foot{
+  border-top:1px solid var(--etch);padding:2.5rem 0 3.5rem;
+  display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:space-between;
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:var(--bone-faint);
+}
+.foot a{text-decoration:none}
+.foot a:hover{color:var(--bone)}
+.foot-links{display:flex;gap:1.5rem;flex-wrap:wrap}
+
+:where(a,button):focus-visible{outline:2px solid var(--red);outline-offset:3px;border-radius:4px}
+
+/* Content is visible by default. Only a page with working JS hides it to animate
+   it back in, so a blocked script never leaves the page blank. */
+.js .reveal{opacity:0;transform:translateY(14px);transition:opacity .6s ease,transform .6s ease}
+.js .reveal.is-in{opacity:1;transform:none}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms!important;transition-duration:.001ms!important}
+  .reveal{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<header class="wrap mast">
+  <a class="mark" href="#top">
+    <img src="icon-128.png" alt="">
+    <span>RedButtonQuit</span>
+  </a>
+  <nav>
+    <a href="#how">How it works</a>
+    <a href="#record">The record</a>
+    <a href="#install">Install</a>
+    <a href="https://github.com/initiator1/redbuttonquit">Source</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="wrap band band--first">
+    <div class="hero">
+      <div>
+        <p class="silk">macOS 14+ · menu bar utility · free and open source</p>
+        <h1 class="display">Close the last window.<br>The app <em>quits</em>.</h1>
+        <p class="lede">
+          macOS leaves apps running after you close their window. RedButtonQuit finishes
+          the job — and keeps a record of every app it closed, so you can see it working.
+        </p>
+        <div class="actions">
+          <a class="btn btn--go" href="https://github.com/initiator1/redbuttonquit/releases/latest">
+            Download for macOS
+          </a>
+          <a class="btn btn--ghost" href="https://github.com/initiator1/redbuttonquit">Read the source</a>
+        </div>
+        <p class="meta" style="margin-top:1.1rem">v1.0.0 · 3.6 MB · Apple silicon and Intel · signed and notarized</p>
+      </div>
+
+      <div class="rig">
+        <div class="stage">
+          <div class="win" id="win">
+            <div class="chrome">
+              <button class="shut" id="shut" aria-label="Close the TextEdit window"></button>
+              <span class="light light--amber" aria-hidden="true"></span>
+              <span class="light light--green" aria-hidden="true"></span>
+              <span class="win-title" id="winTitle">Untitled — TextEdit</span>
+            </div>
+            <div class="win-body">
+              <div class="skel"></div><div class="skel"></div>
+              <div class="skel"></div><div class="skel"></div>
+            </div>
+          </div>
+          <button class="relaunch" id="relaunch">Open another window</button>
+          <p class="nudge" id="nudge">Click the red button</p>
+        </div>
+
+        <div class="recorder">
+          <div class="recorder-head"><span class="pip"></span> Quit history</div>
+          <ul class="tape" id="tape">
+            <li class="tape-empty" id="tapeEmpty">Nothing recorded yet.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE GAP ============ -->
+  <section class="wrap band reveal">
+    <p class="silk">The gap</p>
+    <h2 class="display" style="font-size:clamp(2rem,4.6vw,3rem);max-width:18ch">
+      A closed window is not a closed app.
+    </h2>
+    <p class="lede" style="margin-bottom:2.75rem">
+      On macOS the red button hides the window and leaves the app running — in your Dock,
+      in your memory, in your Cmd-Tab. People arriving from Windows expect otherwise, and
+      after twenty years so do plenty of Mac users.
+    </p>
+    <div class="gap-grid">
+      <div class="gap-cell">
+        <h3>macOS on its own</h3>
+        <div class="flow">
+          <b>You close the last window</b>
+          <span class="arrow">↓</span>
+          <span class="out">The window disappears. The app keeps running.</span>
+        </div>
+      </div>
+      <div class="gap-cell gap-cell--after">
+        <h3>With RedButtonQuit</h3>
+        <div class="flow">
+          <b>You close the last window</b>
+          <span class="arrow">↓</span>
+          <span class="out">The app quits, and the moment is written down.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT DECIDES ============ -->
+  <section class="wrap band reveal" id="how">
+    <p class="silk">How it decides</p>
+    <h2 class="display" style="font-size:clamp(2rem,4.6vw,3rem);max-width:20ch;margin-bottom:2.75rem">
+      Three things happen between your click and the quit.
+    </h2>
+    <div class="seq">
+      <div class="step">
+        <h3>It watches</h3>
+        <p>
+          RedButtonQuit uses the macOS Accessibility API to see window events across your
+          regular apps. That is the only way macOS lets an app know a window closed.
+        </p>
+      </div>
+      <div class="step">
+        <h3>It waits</h3>
+        <p>
+          Entering or leaving fullscreen destroys a window and builds a new one. So it pauses
+          one second first. If a real window appears, the quit is called off.
+        </p>
+      </div>
+      <div class="step">
+        <h3>It confirms</h3>
+        <p>
+          The app is asked to quit the normal way, so unsaved work still stops it. Then
+          RedButtonQuit checks whether the app really exited, and records what it found.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE RECORD ============ -->
+  <section class="band paper reveal" id="record">
+    <div class="wrap">
+      <p class="silk">The record</p>
+      <div class="record-grid">
+        <div>
+          <h2 class="display">Proof that it worked.</h2>
+          <p class="lede">
+            A utility that works silently is indistinguishable from a utility that broke
+            silently. RedButtonQuit keeps a plain list of the apps it closed and when — and
+            of the times it decided not to, so a surprise is never a mystery.
+          </p>
+          <ul class="plain">
+            <li><span class="tick">▪</span><span><b>Only its own work.</b> Apps you quit yourself never appear.</span></li>
+            <li><span class="tick">▪</span><span><b>Confirmed, not assumed.</b> An entry says "quit" only after the app actually exited.</span></li>
+            <li><span class="tick">▪</span><span><b>Yours alone.</b> Kept on your Mac, capped, and clearable in one click.</span></li>
+          </ul>
+        </div>
+
+        <div class="ledger">
+          <div class="ledger-head"><span>History</span><span>All</span></div>
+          <div class="ledger-row">
+            <span class="glyph">Sa</span>
+            <div><strong>Safari</strong><small>Quit</small></div>
+            <span class="stamp stamp--quit">3:42 PM</span>
+          </div>
+          <div class="ledger-row">
+            <span class="glyph">Pr</span>
+            <div><strong>Preview</strong><small>Quit cancelled — a new window opened</small></div>
+            <span class="stamp stamp--near">3:31 PM</span>
+          </div>
+          <div class="ledger-row">
+            <span class="glyph">Pa</span>
+            <div><strong>Pages</strong><small>Asked to quit — still running</small></div>
+            <span class="stamp stamp--near">2:58 PM</span>
+          </div>
+          <div class="ledger-row">
+            <span class="glyph">Sp</span>
+            <div><strong>Spotify</strong><small>Skipped — on your exclusion list</small></div>
+            <span class="stamp stamp--near">2:04 PM</span>
+          </div>
+          <div class="ledger-row">
+            <span class="glyph">Te</span>
+            <div><strong>TextEdit</strong><small>Quit</small></div>
+            <span class="stamp stamp--quit">1:47 PM</span>
+          </div>
+          <div class="ledger-foot">Kept on this Mac only. Never uploaded anywhere.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SPEC ============ -->
+  <section class="wrap band reveal">
+    <p class="silk">What it is, exactly</p>
+    <table class="spec">
+      <tr><th>Requires</th><td>macOS 14 Sonoma or later. Apple silicon or Intel.</td></tr>
+      <tr><th>Permission</th><td>Accessibility. It is the only macOS API that reports window events, and the app cannot work without it.</td></tr>
+      <tr><th>Network use</th><td><em>None.</em> The app contains no networking code. It never checks in, phones home, or updates itself.</td></tr>
+      <tr><th>Data collected</th><td><em>None.</em> No analytics, no crash reporting, no account. The quit history stays in one file on your Mac.</td></tr>
+      <tr><th>Protected apps</th><td>Finder, Dock, System Settings and other system apps are never quit. You can exclude any other app yourself.</td></tr>
+      <tr><th>Signature</th><td>Developer ID certificate issued to INITIATOR LLC, notarized by Apple, ticket stapled.</td></tr>
+      <tr><th>Licence</th><td>MIT. Every line is on GitHub, and you can build it yourself.</td></tr>
+      <tr><th>Price</th><td>Free. There is no paid tier and no upsell.</td></tr>
+    </table>
+  </section>
+
+  <!-- ============ INSTALL ============ -->
+  <section class="wrap band reveal" id="install">
+    <p class="silk">Install</p>
+    <h2 class="display" style="font-size:clamp(2rem,4.6vw,3rem);max-width:16ch;margin-bottom:2.75rem">
+      About two minutes.
+    </h2>
+    <div class="install">
+      <div><span>01</span><h3>Download</h3><p>Grab the disk image from the latest GitHub release.</p></div>
+      <div><span>02</span><h3>Drag to Applications</h3><p>Open the DMG and drop the app in your Applications folder.</p></div>
+      <div><span>03</span><h3>Grant Accessibility</h3><p>Launch it. A short walkthrough opens System Settings at the right switch.</p></div>
+      <div><span>04</span><h3>Close a window</h3><p>That is the whole product. Check the menu bar to see what it did.</p></div>
+    </div>
+    <div class="actions">
+      <a class="btn btn--go" href="https://github.com/initiator1/redbuttonquit/releases/latest">Download for macOS</a>
+      <span class="meta">Gatekeeper opens it without a warning, because every build is notarized.</span>
+    </div>
+  </section>
+
+  <!-- ============ SUPPORT ============ -->
+  <section class="wrap band reveal">
+    <div class="support">
+      <div>
+        <p class="silk">Support the work</p>
+        <h2 class="display">Free, and staying that way.</h2>
+        <p>
+          RedButtonQuit is one person's work, given away under an MIT licence. If it saved
+          you a hundred trips to the Cmd-Q key, a star on GitHub is thanks enough.
+        </p>
+      </div>
+      <div class="actions">
+        <a class="btn btn--ghost" href="https://github.com/initiator1/redbuttonquit">Star it on GitHub</a>
+        <a class="btn btn--ghost" href="https://github.com/initiator1/redbuttonquit/issues">Report a problem</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="wrap foot">
+  <span>© 2026 INITIATOR LLC · MIT licence</span>
+  <span class="foot-links">
+    <a href="https://github.com/initiator1/redbuttonquit">GitHub</a>
+    <a href="https://github.com/initiator1/redbuttonquit/releases/latest">Releases</a>
+    <a href="https://github.com/initiator1/redbuttonquit/issues">Issues</a>
+  </span>
+</footer>
+
+<script>
+(function(){
+  var apps = [
+    {name:"TextEdit", title:"Untitled — TextEdit"},
+    {name:"Preview",  title:"Receipt.pdf — Preview"},
+    {name:"Safari",   title:"Start Page — Safari"},
+    {name:"Calendar", title:"August 2026 — Calendar"}
+  ];
+  var i = 0;
+  var win = document.getElementById("win");
+  var shut = document.getElementById("shut");
+  var title = document.getElementById("winTitle");
+  var tape = document.getElementById("tape");
+  var empty = document.getElementById("tapeEmpty");
+  var nudge = document.getElementById("nudge");
+  var relaunch = document.getElementById("relaunch");
+  var busy = false;
+
+  function clockTime(){
+    return new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit", second:"2-digit"});
+  }
+
+  function print(name){
+    if (empty && empty.parentNode) empty.remove();
+    var li = document.createElement("li");
+    var left = document.createElement("span");
+    var right = document.createElement("span");
+    left.textContent = name + " — quit";
+    right.textContent = clockTime();
+    li.appendChild(left);
+    li.appendChild(right);
+    tape.insertBefore(li, tape.firstChild);
+    while (tape.children.length > 4) tape.removeChild(tape.lastChild);
+  }
+
+  function close(){
+    if (busy) return;
+    busy = true;
+    nudge.classList.add("is-hidden");
+    var current = apps[i].name;
+    win.classList.add("is-closing");
+    setTimeout(function(){
+      win.classList.add("is-gone");
+      relaunch.classList.add("is-shown");
+    }, 300);
+    setTimeout(function(){ print(current); busy = false; }, 1000);
+  }
+
+  function reopen(){
+    i = (i + 1) % apps.length;
+    title.textContent = apps[i].title;
+    shut.setAttribute("aria-label", "Close the " + apps[i].name + " window");
+    relaunch.classList.remove("is-shown");
+    win.classList.remove("is-gone");
+    requestAnimationFrame(function(){ win.classList.remove("is-closing"); });
+  }
+
+  shut.addEventListener("click", close);
+  relaunch.addEventListener("click", reopen);
+
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){ e.target.classList.add("is-in"); io.unobserve(e.target); }
+      });
+    }, {rootMargin:"0px 0px -12% 0px"});
+    document.querySelectorAll(".reveal").forEach(function(el){ io.observe(el); });
+  } else {
+    document.querySelectorAll(".reveal").forEach(function(el){ el.classList.add("is-in"); });
+  }
+})();
+</script>
+
+</body>
+</html>
