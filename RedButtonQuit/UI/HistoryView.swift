@@ -51,7 +51,10 @@ struct HistoryView: View {
                 List(filteredEvents) { event in
                     QuitHistoryRow(event: event)
                 }
-                .listStyle(.inset(alternatesRowBackgrounds: true))
+                // Plain inset, never alternating backgrounds: the zebra fill paints
+                // every empty row below the last entry, so a short history reads as
+                // a screen full of blank grey bars.
+                .listStyle(.inset)
             }
 
             Divider()
