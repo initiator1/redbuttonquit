@@ -5,65 +5,32 @@ before archiving it. The app itself is SHIPPED: v1.0.0 is live on GitHub,
 notarized, verified by downloading from the public URL and checking the
 notarization ticket survived the round trip.
 
-## The domain: redbuttonquit.com is suspended and the fix did not take
+## The domain: redbuttonquit.com — suspension CLEARED, now an empty zone
 
-State verified against the registry and the registrar on 2026-08-14:
+**Verified live 2026-08-19 against the registry and NFSN's nameservers.** This
+replaces the 2026-08-14 entry, which said the verification had failed.
 
-- **Status: Suspended (Whois Verification), nameservers parked on
-  `NS1/NS2.VERIFICATION-HOLD.SUSPENDED-DOMAIN.COM`.** Public DNS returns
-  nothing. The domain has been dead since 2026-01-14.
-- BOSS clicked Resend on 2026-08-13, received the mail, clicked the link, and
-  got a success page. **The verification did not go through** — the registry
-  record still reads 2026-01-14. The success page was a claim, not an outcome.
-- Cause of the original failure: the registrant of record is the privacy proxy
-  `redbuttonquit.com@respectmyprivacy.com`, so ICANN's January verification
-  mail never reached a human.
-- Storefront: **NearlyFreeSpeech.NET**, member account `6440-1F0BFCDF` (the
-  registrar of record, PublicDomainRegistry, is wholesale-only — no direct
-  accounts). Their member UI blocks direct URL jumps (referer guard); navigate
-  from `/domains`.
-- Misread hazard: whois prints `status: ACTIVE` for the `.com` registry
-  itself. That line is not about this domain.
+- **The Whois verification did go through.** Registry `Updated Date` is
+  `2026-08-14T11:00:09Z` — about fifteen minutes after the last check said it
+  had not taken. Nameservers are now the real `ns.phx1` / `ns.phx5
+  .nearlyfreespeech.net`, not the `VERIFICATION-HOLD.SUSPENDED-DOMAIN.COM`
+  parking pair.
+- **The NFSN support mail was never needed and must not be sent.** The draft
+  in the earlier version of this file is dead. Do not send it.
+- **The zone answers but is empty.** SOA resolves from NFSN. There is no A,
+  no www, no MX, no TXT. The domain resolves to nothing because nothing has
+  been put in it, which is a different problem from being switched off.
+- `clientTransferProhibited` is set. That is the ordinary registrar lock, not
+  a penalty — it is step 5 of the move below.
 
-### Next action — BOSS sends this to NFSN support (draft ready, never sent)
+### The clock — unchanged and still the real risk
 
-> Subject: redbuttonquit.com still suspended after Whois verification
->
-> My domain redbuttonquit.com is suspended for Whois Verification. The
-> nameservers are still NS1/NS2.VERIFICATION-HOLD.SUSPENDED-DOMAIN.COM.
->
-> On 2026-08-13 I used Resend, received the email, and clicked the
-> verification link. The page confirmed success. More than 24 hours later the
-> domain is still suspended, and public DNS returns nothing.
->
-> The registrant contact is the privacy proxy
-> redbuttonquit.com@respectmyprivacy.com.
->
-> Please confirm whether the verification was received, and restore my
-> nameservers.
->
-> Please do not change the registrant contact. I plan to transfer this domain,
-> and I must avoid a 60-day transfer lock.
->
-> Member account: 6440-1F0BFCDF
+Expires **2026-12-29**, renewal type **Manual**. 132 days left as of
+2026-08-19. It will not renew itself. Estimated deletion 2027-03-14 if it
+lapses. The Cloudflare transfer fixes this permanently: it adds a year (to
+2027-12-29) and turns on auto-renew.
 
-### Standing warnings
-
-- **Do not click Resend again** — it does nothing against a processing
-  failure, and some registrars rate-limit it.
-- **Never use NFSN's "Remove RespectMyPrivacy" action.** It looks like the
-  obvious fix for a proxy eating mail. It changes the registrant of record,
-  which is a Change of Registrant and can start a **60-day inter-registrar
-  transfer lock**, pushing the Cloudflare move to mid-October. Real details go
-  on the domain at Cloudflare, after the transfer, where privacy is free.
-
-### The clock
-
-Expires **2026-12-29**, renewal type **Manual** — it will not renew itself.
-Estimated deletion 2027-03-14 if it lapses. The Cloudflare transfer solves
-this: it adds a year (to 2027-12-29) and turns on auto-renew.
-
-### Cloudflare move, once the domain is live again (every step is BOSS's login)
+### The Cloudflare move is now unblocked — every step is BOSS's login
 
 1. Cloudflare → Add a site → redbuttonquit.com → Free plan.
 2. Copy the two nameservers Cloudflare assigns.
@@ -73,6 +40,26 @@ this: it adds a year (to 2027-12-29) and turns on auto-renew.
 6. NFSN: request the auth/EPP code.
 7. Cloudflare → Domain Registration → Transfer Domains → enter the code.
    Up to 5 business days.
+
+### Standing warning — still live
+
+**Never use NFSN's "Remove RespectMyPrivacy" action.** It changes the
+registrant of record, which is a Change of Registrant and can start a
+**60-day inter-registrar transfer lock**. Real details go on the domain at
+Cloudflare, after the transfer, where privacy is free.
+
+## The website: none exists, and there is a placement decision already made
+
+Checked 2026-08-19. There is no site, no landing page, and no `docs/` branch
+in this repo or anywhere under `/Users/db1/Projects`. Nothing was ever
+started.
+
+A prior decision already covers where this app is presented:
+`ai-initiator/PRODUCT-LAB-PLACEMENT-RULE.md` places RedButtonQuit on the
+AI-Initiator Product Lab under **More Apps**, linking to GitHub releases.
+`domains/INVENTORY.md` lists redbuttonquit.com among the domains that are
+"paid for and pointing nowhere". Building a standalone site is a live
+question against that rule, not a blank slate — decide the two together.
 
 ## Related, tracked elsewhere
 
