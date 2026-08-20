@@ -506,7 +506,7 @@ struct AboutTab: View {
                     Text("Like this app?")
                         .font(.caption)
                         .fontWeight(.medium)
-                    Link("Buy me a coffee", destination: URL(string: "https://ko-fi.com/initiatorworks")!)
+                    Link("Buy me a coffee", destination: URL(string: "https://ko-fi.com/initiatorworks?app=redbuttonquit")!)
                         .font(.caption)
                 }
 

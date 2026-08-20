@@ -182,6 +182,15 @@ open RedButtonQuit.xcodeproj
 # Cmd+B to build, Cmd+R to run
 ```
 
+## Support
+
+RedButtonQuit is free and open source, and it stays that way. There is no paid tier
+and there won't be one.
+
+If it saved you a hundred trips to the Cmd-Q key, you can
+[buy me a coffee](https://ko-fi.com/initiatorworks?app=redbuttonquit). The same page
+supports the other free tools in this collection.
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
