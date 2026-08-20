@@ -42,16 +42,40 @@ Expires **2026-12-29**, renewal type **Manual**. 132 days left as of
 lapses. The Cloudflare transfer fixes this permanently: it adds a year (to
 2027-12-29) and turns on auto-renew.
 
-### The Cloudflare move is now unblocked — every step is BOSS's login
+### The Cloudflare move — steps 1-3 are DONE (2026-08-20)
 
-1. Cloudflare → Add a site → redbuttonquit.com → Free plan.
-2. Copy the two nameservers Cloudflare assigns.
-3. NFSN `/domains` → the domain → set nameservers to Cloudflare's two.
-4. Wait for Cloudflare to report the zone **Active** (it emails).
-5. NFSN: Unlock Domain.
+1. ~~Cloudflare → Add a site → redbuttonquit.com → Free plan.~~ **Done.**
+   Zone ID `1bff360fa9e2ce357c657b1761f8531c`, Free plan, DNS scan found 0
+   records because the zone was empty.
+2. ~~Copy the assigned nameservers.~~ **Done:** `algin.ns.cloudflare.com` and
+   `meadow.ns.cloudflare.com`.
+3. ~~NFSN → set nameservers.~~ **Done.** Registry `Updated Date` is
+   `2026-08-20T10:59:30Z` and the registry now lists both Cloudflare
+   nameservers. Cloudflare's nameservers already answer SOA for the zone.
+   Public resolvers still return the old NFSN pair from cache; that expires on
+   its own.
+
+**Remaining, all BOSS's login:**
+
+4. Wait for Cloudflare to report the zone **Active** (it emails). Typically
+   1-2 hours, up to 24.
+5. NFSN → domains → redbuttonquit.com → Registration → **Unlock Domain**.
+   Lock Status read "Locked" on 2026-08-20, which is normal.
 6. NFSN: request the auth/EPP code.
 7. Cloudflare → Domain Registration → Transfer Domains → enter the code.
    Up to 5 business days.
+
+**Whois Verification reads "Verified"** as of 2026-08-20, confirming the
+January suspension is fully resolved at the registrar, not just at the registry.
+
+After the transfer completes, expiry moves from 2026-12-29 to **2027-12-29** —
+Cloudflare adds one year to the existing expiry, not one year from the transfer
+date, per their own documentation — and auto-renew replaces Manual Renew.
+
+Once the zone is Active, the site can deploy: Cloudflare → Workers & Pages →
+Create → Pages → connect `initiator1/redbuttonquit`, framework preset **None**,
+build command **empty**, output directory **`site`**. Then add the custom domain,
+which also creates the A/CNAME records the zone currently lacks.
 
 ### Standing warning — still live
 
@@ -244,16 +268,40 @@ Expires **2026-12-29**, renewal type **Manual**. 132 days left as of
 lapses. The Cloudflare transfer fixes this permanently: it adds a year (to
 2027-12-29) and turns on auto-renew.
 
-### The Cloudflare move is now unblocked — every step is BOSS's login
+### The Cloudflare move — steps 1-3 are DONE (2026-08-20)
 
-1. Cloudflare → Add a site → redbuttonquit.com → Free plan.
-2. Copy the two nameservers Cloudflare assigns.
-3. NFSN `/domains` → the domain → set nameservers to Cloudflare's two.
-4. Wait for Cloudflare to report the zone **Active** (it emails).
-5. NFSN: Unlock Domain.
+1. ~~Cloudflare → Add a site → redbuttonquit.com → Free plan.~~ **Done.**
+   Zone ID `1bff360fa9e2ce357c657b1761f8531c`, Free plan, DNS scan found 0
+   records because the zone was empty.
+2. ~~Copy the assigned nameservers.~~ **Done:** `algin.ns.cloudflare.com` and
+   `meadow.ns.cloudflare.com`.
+3. ~~NFSN → set nameservers.~~ **Done.** Registry `Updated Date` is
+   `2026-08-20T10:59:30Z` and the registry now lists both Cloudflare
+   nameservers. Cloudflare's nameservers already answer SOA for the zone.
+   Public resolvers still return the old NFSN pair from cache; that expires on
+   its own.
+
+**Remaining, all BOSS's login:**
+
+4. Wait for Cloudflare to report the zone **Active** (it emails). Typically
+   1-2 hours, up to 24.
+5. NFSN → domains → redbuttonquit.com → Registration → **Unlock Domain**.
+   Lock Status read "Locked" on 2026-08-20, which is normal.
 6. NFSN: request the auth/EPP code.
 7. Cloudflare → Domain Registration → Transfer Domains → enter the code.
    Up to 5 business days.
+
+**Whois Verification reads "Verified"** as of 2026-08-20, confirming the
+January suspension is fully resolved at the registrar, not just at the registry.
+
+After the transfer completes, expiry moves from 2026-12-29 to **2027-12-29** —
+Cloudflare adds one year to the existing expiry, not one year from the transfer
+date, per their own documentation — and auto-renew replaces Manual Renew.
+
+Once the zone is Active, the site can deploy: Cloudflare → Workers & Pages →
+Create → Pages → connect `initiator1/redbuttonquit`, framework preset **None**,
+build command **empty**, output directory **`site`**. Then add the custom domain,
+which also creates the A/CNAME records the zone currently lacks.
 
 ### Standing warning — still live
 
