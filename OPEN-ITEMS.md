@@ -158,16 +158,19 @@ Ko-fi" left off deliberately — turning it on costs 5% of every tip).
 README, and FUNDING.yml.
 
 The `app=` tag reads back only through Ko-fi's GA4 integration, which sits behind
-Ko-fi's advanced-feature tier. **Corrected 2026-08-20: that tier is not a paid
-monthly account.** Ko-fi's own pricing page lists three levels — Ko-fi free (0%
+Ko-fi's advanced-feature tier — the timeannouncer session cites a Ko-fi help
+article, "Connect your Ko-fi page to Google Analytics", stating Contributor is
+required. **Corrected 2026-08-20: that tier is not a paid monthly account.** Ko-fi's own pricing page lists three levels — Ko-fi free (0%
 on tips, "no advanced features"), Standard (5% service fee on all payment types,
 unlocks the extra tools, no monthly charge), and Gold ($12/month, 0% fee). The
 advanced tier is the "Get all of Ko-fi" toggle on the Payment settings tab, and
 it costs 5% of every tip rather than a subscription. It is reversible.
 
-Not independently confirmed: whether GA4 specifically is one of the features
-behind that tier. Ko-fi's pricing page says "advanced features" without naming
-it. Do not tell BOSS he can see click counts today — he cannot, the toggle is off.
+**The "Get all of Ko-fi" toggle is OFF.** Verified directly in BOSS's Payment
+settings on 2026-08-20, after a sibling session reported he had switched
+Contributor on. He has not. Do not tell him the tag is recording anything, and
+do not repeat another session's claim about his account state without looking —
+this one costs 5% of every tip.
 
 **GitHub Sponsors is not enabled, and the Sponsor button was silently dead.**
 Found 2026-08-20 by the unstray session, confirmed here: `.github/FUNDING.yml`
@@ -206,15 +209,32 @@ one alone renders nothing and reports no error.
 
 Verified against the public pages afterwards:
 
-| repo | Sponsor UI | funding link |
-| --- | --- | --- |
-| redbuttonquit | renders | CUSTOM |
-| unstray | renders | CUSTOM |
-| timeannouncer | not yet | none — needs its FUNDING.yml |
-| portmanager | not yet | none — needs its FUNDING.yml |
+| repo | FUNDING.yml in tree | GitHub indexed it | Sponsor UI |
+| --- | --- | --- | --- |
+| redbuttonquit | yes, `2563fd29` | yes | renders |
+| unstray | yes, `383b05f6` | yes | renders |
+| timeannouncer | yes, `aa7fca3b` | not yet | not yet |
+| portmanager | yes, `bde14022` | not yet | not yet |
 
-The last two need nothing from BOSS. Their buttons appear on their own once
-their sessions commit a FUNDING.yml.
+**All four files exist and all four carry `custom:` with the right `?app=` tag.**
+The two that do not render were both committed today; the two that render were
+committed 2026-07-28 and 2026-08-12. **GitHub indexes FUNDING.yml on a lag.**
+Nothing is needed from BOSS or from any session — the buttons appear when
+GitHub catches up.
+
+**Trap, recorded because this session fell into it.** GraphQL `fundingLinks`
+returned empty for the two new files, and their settings pages read "Set up
+sponsor button" rather than "Edit funding links". Both are GitHub-side symptoms
+of the indexing lag, and this session read them as evidence the files were
+missing — then told a sibling session to commit one. Caught by the timeannouncer
+session before any damage. **Check `gh api repos/OWNER/REPO/contents/.github/
+FUNDING.yml?ref=main` before concluding a funding file is absent.** GitHub's own
+UI is not a witness to what is in the tree, and the likely "repair" — re-adding
+the file with a `ko_fi:` key — silently drops the tag, because `ko_fi:` accepts
+only a bare username.
+
+Note `unstray` uses the scalar form `custom: https://...` while the others use
+the array form. Both are valid. Do not normalise it.
 
 **Still open:** the other three apps (unstray, timeannouncer, portmanager) are
 being handled in their own sessions.
