@@ -131,9 +131,19 @@ Ko-fi" left off deliberately — turning it on costs 5% of every tip).
 
 **Tagging:** every RedButtonQuit surface uses
 `https://ko-fi.com/initiatorworks?app=redbuttonquit` — About tab, website button,
-README, and the repo's Sponsor button. The `app=` tag reads back only through
-Ko-fi's GA4 integration, which needs a **paid** Ko-fi Contributor account. It
-records nothing today and costs nothing to carry.
+README, and FUNDING.yml.
+
+The `app=` tag reads back only through Ko-fi's GA4 integration, which sits behind
+Ko-fi's advanced-feature tier. **Corrected 2026-08-20: that tier is not a paid
+monthly account.** Ko-fi's own pricing page lists three levels — Ko-fi free (0%
+on tips, "no advanced features"), Standard (5% service fee on all payment types,
+unlocks the extra tools, no monthly charge), and Gold ($12/month, 0% fee). The
+advanced tier is the "Get all of Ko-fi" toggle on the Payment settings tab, and
+it costs 5% of every tip rather than a subscription. It is reversible.
+
+Not independently confirmed: whether GA4 specifically is one of the features
+behind that tier. Ko-fi's pricing page says "advanced features" without naming
+it. Do not tell BOSS he can see click counts today — he cannot, the toggle is off.
 
 **GitHub Sponsors is not enabled, and the Sponsor button was silently dead.**
 Found 2026-08-20 by the unstray session, confirmed here: `.github/FUNDING.yml`
@@ -146,6 +156,24 @@ entry in GitHub's Sponsor dropdown is worth more than the tag.
 
 The dead `github.com/sponsors/initiator1` URL that unstray's README carried does
 **not** appear anywhere in this repo. Checked 2026-08-20.
+
+**The Sponsor button still does not render, and fixing FUNDING.yml was not
+enough.** Verified 2026-08-20: GitHub has parsed the file —
+
+    gh api graphql -f query='{ repository(owner:"initiator1", name:"redbuttonquit") { fundingLinks { platform url } } }'
+
+returns `CUSTOM https://ko-fi.com/initiatorworks?app=redbuttonquit`. But the
+public repo page contains no Sponsor affordance at all, while the control repo
+`sindresorhus/awesome` renders "Sponsor this project" when fetched the same way.
+
+Cause: the per-repo **Sponsorships** feature is switched off. GitHub accepts the
+funding link and displays nothing — the same silent failure as the old `github:`
+key, one layer higher up.
+
+**BOSS's action, web-only, no API exists for it:** each repo's Settings →
+General → Features → tick **Sponsorships**. Four repos, four ticks
+(redbuttonquit, unstray, timeannouncer, portmanager). Found by the timeannouncer
+session, reproduced here.
 
 **Still open:** the other three apps (unstray, timeannouncer, portmanager) are
 being handled in their own sessions.
