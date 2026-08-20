@@ -129,9 +129,26 @@ Ko-fi" left off deliberately — turning it on costs 5% of every tip).
 - The old `ko-fi.com/initiator1` never existed and shipped dead in v1.0.0.
   Anyone still on v1.0.0 has a dead link until they update.
 
-**Still open:** add the Ko-fi link to the other three apps (unstray,
-timeannouncer, portmanager). None of them carries it, so one page is collecting
-for four apps while only one points at it.
+**Tagging:** every RedButtonQuit surface uses
+`https://ko-fi.com/initiatorworks?app=redbuttonquit` — About tab, website button,
+README, and the repo's Sponsor button. The `app=` tag reads back only through
+Ko-fi's GA4 integration, which needs a **paid** Ko-fi Contributor account. It
+records nothing today and costs nothing to carry.
+
+**GitHub Sponsors is not enabled, and the Sponsor button was silently dead.**
+Found 2026-08-20 by the unstray session, confirmed here: `.github/FUNDING.yml`
+said `github: [initiator1]`, but no Sponsors listing exists, so
+`github.com/sponsors/initiator1` redirects to the profile page instead of
+404ing and no button ever rendered. FUNDING.yml now uses `custom:` with the
+tagged Ko-fi URL. `ko_fi:` was not used because it accepts a bare username only
+and cannot carry the tag — swap to `ko_fi: initiatorworks` if the branded Ko-fi
+entry in GitHub's Sponsor dropdown is worth more than the tag.
+
+The dead `github.com/sponsors/initiator1` URL that unstray's README carried does
+**not** appear anywhere in this repo. Checked 2026-08-20.
+
+**Still open:** the other three apps (unstray, timeannouncer, portmanager) are
+being handled in their own sessions.
 
 **Verify before relying on it:** `support@initiatorworks.com` is printed in the
 Ko-fi auto thank-you message. Confirm it actually delivers mail.

@@ -1,5 +1,11 @@
 # Shows a "Sponsor" button on the repository.
 #
-# This activates automatically once the GitHub Sponsors listing for initiator1
-# is approved. Until then GitHub ignores it and no button appears.
-github: [initiator1]
+# This pointed at `github: [initiator1]` until 2026-08-20. That key does nothing
+# unless a GitHub Sponsors listing exists, and none does — github.com/sponsors/
+# initiator1 quietly redirects to the profile page rather than 404ing, so the
+# button simply never appeared.
+#
+# It now points at the Ko-fi page, which is live. `custom` is used instead of the
+# `ko_fi` key because `ko_fi` accepts only a bare username, and the ?app= tag is
+# what tells one Ko-fi page which of the four apps sent a visitor.
+custom: ["https://ko-fi.com/initiatorworks?app=redbuttonquit"]
