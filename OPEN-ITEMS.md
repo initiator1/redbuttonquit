@@ -194,16 +194,33 @@ Cause: the per-repo **Sponsorships** feature is switched off. GitHub accepts the
 funding link and displays nothing — the same silent failure as the old `github:`
 key, one layer higher up.
 
-**BOSS's action, web-only, no API exists for it:** each repo's Settings →
-General → Features → tick **Sponsorships**. Four repos, four ticks
-(redbuttonquit, unstray, timeannouncer, portmanager). Found by the timeannouncer
-session, reproduced here.
+**RESOLVED 2026-08-20.** All four boxes are ticked (redbuttonquit, unstray,
+timeannouncer, portmanager). Confirmed there is no API for it — the repos
+endpoint exposes `has_issues`, `has_projects`, `has_downloads`, `has_wiki`,
+`has_pages`, `has_discussions`, `has_pull_requests` and nothing for
+sponsorships — so it was done through the browser.
+
+**The Sponsor button needs BOTH halves, which is why this was confusing:** the
+Sponsorships feature switched on, AND a funding link GitHub can parse. Either
+one alone renders nothing and reports no error.
+
+Verified against the public pages afterwards:
+
+| repo | Sponsor UI | funding link |
+| --- | --- | --- |
+| redbuttonquit | renders | CUSTOM |
+| unstray | renders | CUSTOM |
+| timeannouncer | not yet | none — needs its FUNDING.yml |
+| portmanager | not yet | none — needs its FUNDING.yml |
+
+The last two need nothing from BOSS. Their buttons appear on their own once
+their sessions commit a FUNDING.yml.
 
 **Still open:** the other three apps (unstray, timeannouncer, portmanager) are
 being handled in their own sessions.
 
-**Verify before relying on it:** `support@initiatorworks.com` is printed in the
-Ko-fi auto thank-you message. Confirm it actually delivers mail.
+**`support@initiatorworks.com` delivers.** Confirmed by BOSS 2026-08-20. It is
+printed in the Ko-fi auto thank-you message.
 
 ## redbuttonquit.com is still dead, and the app links to it
 
