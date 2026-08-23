@@ -379,3 +379,21 @@ question against that rule, not a blank slate — decide the two together.
 the rebased remote) was resolved by aligning to GitHub after saving the old
 tip on a backup branch; content was identical, only hashes differed. The
 v1.0.0 release artifact is untouched.
+
+<!-- liveness-sweep:begin -->
+## Liveness gaps
+
+_This is what was true on 2026-08-23, not necessarily what is true now._ The section is maintained automatically and clears itself once every check is live. Everything outside these markers is left alone.
+
+**Before acting on anything here, re-run the check.** Do not fix from this snapshot - another session may have already closed it.
+
+    python3 ~/.claude/scripts/liveness-sweep.py .
+
+- site/index.html:17: https://fonts.googleapis.com is dead.
+- site/index.html:18: https://fonts.gstatic.com is dead.
+- .github/FUNDING.yml:11, README.md:191, RedButtonQuit/UI/PreferencesView.swift:509 and 3 more: https://ko-fi.com/initiatorworks?app=redbuttonquit: Cloudflare blocks scripted checks; load it in a browser and confirm the page renders its form — do not match the title, it changes.
+- RedButtonQuit/UI/PreferencesView.swift:495: https://redbuttonquit.com is dead.
+- site/index.html:13: https://redbuttonquit.com/ is dead.
+- site/index.html:14: https://redbuttonquit.com/icon-512.png is dead.
+- Tag v1.0.0 points to 27117d22758b5743a53d00b0228b45f2f2317434 and is not an ancestor of origin/main. It is a lightweight tag. A diff against this tag lists commits the tag already contains; find the real release point on the branch before using it. This tag carries a published GitHub release. Deleting or force-moving it converts the release to a draft. Leave it; tag the next release correctly.
+<!-- liveness-sweep:end -->
