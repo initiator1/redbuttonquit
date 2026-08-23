@@ -7,7 +7,7 @@ Thank you for your interest in contributing to RedButtonQuit!
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/yourusername/redbuttonquit.git
+   git clone https://github.com/initiator1/redbuttonquit.git
    cd redbuttonquit
    ```
 3. **Open in Xcode**:

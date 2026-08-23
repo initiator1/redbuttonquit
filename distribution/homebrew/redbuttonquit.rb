@@ -12,10 +12,10 @@ cask "redbuttonquit" do
   version "1.0.0"
   sha256 "PLACEHOLDER_SHA256_HASH"
 
-  url "https://github.com/yourusername/redbuttonquit/releases/download/v#{version}/RedButtonQuit-#{version}.dmg"
+  url "https://github.com/initiator1/redbuttonquit/releases/download/v#{version}/RedButtonQuit-#{version}.dmg"
   name "RedButtonQuit"
   desc "Quit apps when closing their last window"
-  homepage "https://github.com/yourusername/redbuttonquit"
+  homepage "https://github.com/initiator1/redbuttonquit"
 
   livecheck do
     url :url
