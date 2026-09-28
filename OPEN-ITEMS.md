@@ -31,8 +31,10 @@ request, and consider a personal tap then.
 - [x] 2026-09-28 DONE: v1.1.1 fixes the two history bugs a launch audience would see.
 - [x] 2026-09-28 DONE: site header no longer wraps at phone width (pushed to main).
 - [x] 2026-09-28 DONE: site live at https://redbuttonquit.com and www, as a Cloudflare Worker with static assets. See site/CLAUDE.md → Deployment.
-- [ ] 2026-09-28 Record a 10-second demo clip for the launch post (needs BOSS's go-ahead,
-  since recording uses his screen).
+- [ ] 2026-09-28 Launch video for the post. BOSS asked whether a motion-designed trailer
+  (Remotion or paid tools; he is willing to pay) beats a plain screen recording, after
+  seeing Opus-made app trailers on X. Moved to its own thread 2026-09-28. Recording his
+  screen still needs his go-ahead.
 - [ ] 2026-09-28 Social preview image, 1200x630, for link shares.
 - [x] 2026-09-28 DONE: GitHub repo website field set to redbuttonquit.com; seven topics added.
 - [ ] 2026-09-28 NEEDS-BOSS: write and post once — r/macapps or Show HN.
