@@ -35,6 +35,14 @@ request, and consider a personal tap then.
   (Remotion or paid tools; he is willing to pay) beats a plain screen recording, after
   seeing Opus-made app trailers on X. Moved to its own thread 2026-09-28. Recording his
   screen still needs his go-ahead.
+  2026-09-27 recommendation (page: https://claude.ai/artifact/DdgRPwTBnkNzF5XvzZUvgd): a
+  ~22s motion trailer built in code with HyperFrames (Apache-2.0, plain HTML, reuses the site
+  hero), with a ~3s labeled real capture of TextEdit quitting in the middle. Remotion is the
+  fallback (free for firms of 3 or fewer). No AI video generators: they invent UI. Required
+  spend $0; optional music via ElevenLabs Starter, $6/mo.
+- [ ] 2026-09-27 NEEDS-BOSS: three calls for the launch clip. (1) OK to record one TextEdit
+  window on his Mac for ~10s. (2) Silent or $6 ElevenLabs music. (3) Tone: cheeky terminal
+  lines or calm instrument-panel.
 - [ ] 2026-09-28 Social preview image, 1200x630, for link shares.
 - [x] 2026-09-28 DONE: GitHub repo website field set to redbuttonquit.com; seven topics added.
 - [ ] 2026-09-28 NEEDS-BOSS: write and post once — r/macapps or Show HN.
