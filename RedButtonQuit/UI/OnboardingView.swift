@@ -295,7 +295,7 @@ struct PermissionStep: View {
                         HStack {
                             ProgressView()
                                 .scaleEffect(0.7)
-                            Text("Waiting for permission...")
+                            Text("Waiting for permission…")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }

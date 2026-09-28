@@ -1,4 +1,16 @@
-# Quit History Implementation Notes
+# Implementation Notes
+
+## Red close button icon (2026-09-27)
+
+- Candidate 2 is the selected generated artwork. `AppIcon.icon` has separate close-button and graphite layers.
+- Xcode 27 builds the icon as `AppIcon`; `CFBundleIconName` and the existing app-icon build setting use that name.
+- An isolated `actool` build of `.icon` creates `AppIcon.icns` and `Assets.car`. The built ICNS matches it.
+- The classic asset set and site PNGs use an 824-pixel body on a transparent 1024-pixel canvas.
+- Menu ellipses use one Unicode character. The debug print string stays unchanged.
+
+**Deviations**: None.
+
+## Quit History Implementation Notes
 
 ## Scope
 

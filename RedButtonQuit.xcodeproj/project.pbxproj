@@ -20,6 +20,7 @@
 		A1000009233D0001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000019233D0001 /* OnboardingView.swift */; };
 		A100000D233D0001 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A100001F233D0001 /* HistoryView.swift */; };
 		A100000A233D0001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A100001C233D0001 /* Assets.xcassets */; };
+		A1000021233D0001 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = A1000020233D0001 /* AppIcon.icon */; };
 		B2000001233D0001 /* AccessibilityMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000011233D0001 /* AccessibilityMonitorTests.swift */; };
 		B2000002233D0001 /* AppTerminationServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000012233D0001 /* AppTerminationServiceTests.swift */; };
 		B2000003233D0001 /* PreferencesManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000013233D0001 /* PreferencesManagerTests.swift */; };
@@ -53,6 +54,7 @@
 		A100001A233D0001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A100001B233D0001 /* RedButtonQuit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = RedButtonQuit.entitlements; sourceTree = "<group>"; };
 		A100001C233D0001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1000020233D0001 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
 		B2000000233D0001 /* RedButtonQuitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RedButtonQuitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B2000011233D0001 /* AccessibilityMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityMonitorTests.swift; sourceTree = "<group>"; };
 		B2000012233D0001 /* AppTerminationServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTerminationServiceTests.swift; sourceTree = "<group>"; };
@@ -136,6 +138,7 @@
 			isa = PBXGroup;
 			children = (
 				A100001C233D0001 /* Assets.xcassets */,
+				A1000020233D0001 /* AppIcon.icon */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -250,6 +253,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A100000A233D0001 /* Assets.xcassets in Resources */,
+				A1000021233D0001 /* AppIcon.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

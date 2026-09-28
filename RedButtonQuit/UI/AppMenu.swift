@@ -59,7 +59,7 @@ struct AppMenu: View {
         Divider()
 
         // Quick actions
-        Button("Excluded Apps...") {
+        Button("Excluded Apps…") {
             preferences.selectedTab = .exclusions
             openSettings()
         }
@@ -73,7 +73,7 @@ struct AppMenu: View {
         }
         .toggleStyle(.checkbox)
 
-        Button("Preferences...") {
+        Button("Settings…") {
             openSettings()
         }
         .keyboardShortcut(",", modifiers: .command)
@@ -87,7 +87,7 @@ struct AppMenu: View {
         }
 
         if !AccessibilityMonitor.isAccessibilityEnabled() {
-            Button("Grant Accessibility Permission...") {
+            Button("Grant Accessibility Permission…") {
                 AccessibilityMonitor.beginPermissionRecovery()
             }
         }

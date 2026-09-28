@@ -1,0 +1,35 @@
+{
+  "fill" : {
+    "solid" : "extended-srgb:0.14118,0.14902,0.16078,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "button-foreground.png",
+          "name" : "Close Button"
+        },
+        {
+          "glass" : false,
+          "image-name" : "background-layer.png",
+          "name" : "Graphite Background"
+        }
+      ],
+      "name" : "Artwork",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}

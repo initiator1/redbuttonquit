@@ -321,6 +321,8 @@ image. macOS already masks app icons to a squircle, so the artwork gets rounded
 twice. House preference is a full-bleed single tile with no nested tile. Worth
 regenerating before the next release; not urgent.
 
+- [x] 2026-09-27 DONE: replaced with a layered close-button icon (AppIcon.icon plus a classic fallback set); see implementation-notes.md.
+
 ## Related, tracked elsewhere
 
 - **Aria's domain watcher calls this domain healthy ("138 days left"). It is
