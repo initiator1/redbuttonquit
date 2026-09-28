@@ -55,15 +55,25 @@ lapses. The Cloudflare transfer fixes this permanently: it adds a year (to
    Public resolvers still return the old NFSN pair from cache; that expires on
    its own.
 
-**Remaining, all BOSS's login:**
+4. ~~Zone Active.~~ **Done 2026-08-20.**
+5. ~~NFSN Unlock Domain.~~ **Done 2026-09-27.** Registry status went from
+   `clientTransferProhibited` to `ok`.
+6. ~~Auth code.~~ **Done 2026-09-27.** BOSS retrieved and pasted it himself;
+   it was never written into any chat or file.
+7. ~~Cloudflare transfer submitted.~~ **Done 2026-09-27.** $10.46, paid by BOSS
+   on a new card. Order `7b743f50-9c46-433b-90e0-4336576efdfa`. Registrant is
+   INITIATOR LLC with db1@pm.me, redacted from public WHOIS by Cloudflare.
+   Registry status read **`pendingTransfer`** at 2026-09-28T05:00Z.
 
-4. Wait for Cloudflare to report the zone **Active** (it emails). Typically
-   1-2 hours, up to 24.
-5. NFSN → domains → redbuttonquit.com → Registration → **Unlock Domain**.
-   Lock Status read "Locked" on 2026-08-20, which is normal.
-6. NFSN: request the auth/EPP code.
-7. Cloudflare → Domain Registration → Transfer Domains → enter the code.
-   Up to 5 business days.
+- [ ] 2026-09-28 Confirm the transfer finished. Expected by about 2026-10-03
+  (five days; NFSN may email an approval link that makes it faster). Check
+  `whois redbuttonquit.com`: Registrar should read Cloudflare, expiry
+  **2027-12-29**, and auto-renew should be on in Cloudflare → Registrations.
+  If it still reads PDR after 2026-10-05, open a Cloudflare support ticket —
+  the manual-renew expiry of 2026-12-29 is the real deadline.
+- [ ] 2026-09-28 NEEDS-BOSS: Deploy the site (Pages settings below). The zone
+  has been Active since 2026-08-20; this step never happened. The app's About
+  link to redbuttonquit.com stays dead until it does.
 
 **Whois Verification reads "Verified"** as of 2026-08-20, confirming the
 January suspension is fully resolved at the registrar, not just at the registry.
@@ -268,98 +278,6 @@ image. macOS already masks app icons to a squircle, so the artwork gets rounded
 twice. House preference is a full-bleed single tile with no nested tile. Worth
 regenerating before the next release; not urgent.
 
-## Quit history validation after review
-
-Added 2026-08-19. The quit history change is uncommitted on
-`feature/quit-history`.
-
-- Run one installed-app check before release. Exclude a normal app, close its
-  last window, and confirm the app stays open. Then remove the exclusion and
-  confirm history changes from `Quitting…` to `Quit` only after termination.
-- The automated store tests cover persistence and outcomes. A handler unit test
-  needs a mock `NSRunningApplication` or termination seam. The feature brief
-  forbids adding that seam for this change.
-
-## The domain: redbuttonquit.com — suspension CLEARED, now an empty zone
-
-**Verified live 2026-08-19 against the registry and NFSN's nameservers.** This
-replaces the 2026-08-14 entry, which said the verification had failed.
-
-- **The Whois verification did go through.** Registry `Updated Date` is
-  `2026-08-14T11:00:09Z` — about fifteen minutes after the last check said it
-  had not taken. Nameservers are now the real `ns.phx1` / `ns.phx5
-  .nearlyfreespeech.net`, not the `VERIFICATION-HOLD.SUSPENDED-DOMAIN.COM`
-  parking pair.
-- **The NFSN support mail was never needed and must not be sent.** The draft
-  in the earlier version of this file is dead. Do not send it.
-- **The zone answers but is empty.** SOA resolves from NFSN. There is no A,
-  no www, no MX, no TXT. The domain resolves to nothing because nothing has
-  been put in it, which is a different problem from being switched off.
-- `clientTransferProhibited` is set. That is the ordinary registrar lock, not
-  a penalty — it is step 5 of the move below.
-
-### The clock — unchanged and still the real risk
-
-Expires **2026-12-29**, renewal type **Manual**. 132 days left as of
-2026-08-19. It will not renew itself. Estimated deletion 2027-03-14 if it
-lapses. The Cloudflare transfer fixes this permanently: it adds a year (to
-2027-12-29) and turns on auto-renew.
-
-### The Cloudflare move — steps 1-3 are DONE (2026-08-20)
-
-1. ~~Cloudflare → Add a site → redbuttonquit.com → Free plan.~~ **Done.**
-   Zone ID `1bff360fa9e2ce357c657b1761f8531c`, Free plan, DNS scan found 0
-   records because the zone was empty.
-2. ~~Copy the assigned nameservers.~~ **Done:** `algin.ns.cloudflare.com` and
-   `meadow.ns.cloudflare.com`.
-3. ~~NFSN → set nameservers.~~ **Done.** Registry `Updated Date` is
-   `2026-08-20T10:59:30Z` and the registry now lists both Cloudflare
-   nameservers. Cloudflare's nameservers already answer SOA for the zone.
-   Public resolvers still return the old NFSN pair from cache; that expires on
-   its own.
-
-**Remaining, all BOSS's login:**
-
-4. Wait for Cloudflare to report the zone **Active** (it emails). Typically
-   1-2 hours, up to 24.
-5. NFSN → domains → redbuttonquit.com → Registration → **Unlock Domain**.
-   Lock Status read "Locked" on 2026-08-20, which is normal.
-6. NFSN: request the auth/EPP code.
-7. Cloudflare → Domain Registration → Transfer Domains → enter the code.
-   Up to 5 business days.
-
-**Whois Verification reads "Verified"** as of 2026-08-20, confirming the
-January suspension is fully resolved at the registrar, not just at the registry.
-
-After the transfer completes, expiry moves from 2026-12-29 to **2027-12-29** —
-Cloudflare adds one year to the existing expiry, not one year from the transfer
-date, per their own documentation — and auto-renew replaces Manual Renew.
-
-Once the zone is Active, the site can deploy: Cloudflare → Workers & Pages →
-Create → Pages → connect `initiator1/redbuttonquit`, framework preset **None**,
-build command **empty**, output directory **`site`**. Then add the custom domain,
-which also creates the A/CNAME records the zone currently lacks.
-
-### Standing warning — still live
-
-**Never use NFSN's "Remove RespectMyPrivacy" action.** It changes the
-registrant of record, which is a Change of Registrant and can start a
-**60-day inter-registrar transfer lock**. Real details go on the domain at
-Cloudflare, after the transfer, where privacy is free.
-
-## The website: none exists, and there is a placement decision already made
-
-Checked 2026-08-19. There is no site, no landing page, and no `docs/` branch
-in this repo or anywhere under `/Users/db1/Projects`. Nothing was ever
-started.
-
-A prior decision already covers where this app is presented:
-`ai-initiator/PRODUCT-LAB-PLACEMENT-RULE.md` places RedButtonQuit on the
-AI-Initiator Product Lab under **More Apps**, linking to GitHub releases.
-`domains/INVENTORY.md` lists redbuttonquit.com among the domains that are
-"paid for and pointing nowhere". Building a standalone site is a live
-question against that rule, not a blank slate — decide the two together.
-
 ## Related, tracked elsewhere
 
 - **Aria's domain watcher calls this domain healthy ("138 days left"). It is
@@ -383,16 +301,13 @@ v1.0.0 release artifact is untouched.
 <!-- liveness-sweep:begin -->
 ## Liveness gaps
 
-_This is what was true on 2026-08-23, not necessarily what is true now._ The section is maintained automatically and clears itself once every check is live. Everything outside these markers is left alone.
+_This is what was true on 2026-09-21, not necessarily what is true now._ The section is maintained automatically and clears itself once every check is live. Everything outside these markers is left alone.
 
 **Before acting on anything here, re-run the check.** Do not fix from this snapshot - another session may have already closed it.
 
     python3 ~/.claude/scripts/liveness-sweep.py .
 
-- site/index.html:17: https://fonts.googleapis.com is dead.
-- site/index.html:18: https://fonts.gstatic.com is dead.
-- .github/FUNDING.yml:11, README.md:191, RedButtonQuit/UI/PreferencesView.swift:509 and 3 more: https://ko-fi.com/initiatorworks?app=redbuttonquit: Cloudflare blocks scripted checks; load it in a browser and confirm the page renders its form — do not match the title, it changes.
-- RedButtonQuit/UI/PreferencesView.swift:495: https://redbuttonquit.com is dead.
+- .github/FUNDING.yml:11, README.md:191, RedButtonQuit/UI/PreferencesView.swift:509, site/index.html:573: https://ko-fi.com/initiatorworks?app=redbuttonquit: Cloudflare blocks scripted checks; load it in a browser and confirm the page renders its form — do not match the title, it changes.
 - site/index.html:13: https://redbuttonquit.com/ is dead.
 - site/index.html:14: https://redbuttonquit.com/icon-512.png is dead.
 - Tag v1.0.0 points to 27117d22758b5743a53d00b0228b45f2f2317434 and is not an ancestor of origin/main. It is a lightweight tag. A diff against this tag lists commits the tag already contains; find the real release point on the branch before using it. This tag carries a published GitHub release. Deleting or force-moving it converts the release to a draft. Leave it; tag the next release correctly.
