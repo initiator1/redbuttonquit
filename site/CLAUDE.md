@@ -63,6 +63,24 @@ Check both: JavaScript on, and JavaScript off. Scroll-reveal is gated behind a `
 
 ## Deployment
 
-Cloudflare Pages, connected to this GitHub repo. Build command empty, output directory `site`.
-The domain move to Cloudflare is tracked in the repo root `OPEN-ITEMS.md`, and every step of it
-is BOSS's own login.
+Live at **https://redbuttonquit.com** and **www.redbuttonquit.com** since 2026-09-28.
+
+Hosting is a **Cloudflare Worker with static assets** (worker name `redbuttonquit`,
+account `db1@pm.me`). It is not a classic Pages project: `wrangler pages project create`
+now delegates to Workers, so the Worker is what exists. Static-asset requests are free and
+unlimited on the Workers Free plan (Cloudflare docs, checked 2026-09-28). No Worker script
+runs; `wrangler.jsonc` only points at the files and binds the two custom domains.
+
+Deploy from this directory:
+
+```bash
+npx wrangler deploy
+```
+
+**`.assetsignore` is load-bearing.** The assets directory is this folder, so without it
+`CLAUDE.md` and `wrangler.jsonc` are served publicly — that happened on the first deploy on
+2026-09-28 and was caught by requesting `/CLAUDE.md`. After every deploy, confirm
+`https://redbuttonquit.com/CLAUDE.md` returns 404.
+
+There is no git-connected auto-deploy. A merge to `main` does not publish the site; run the
+deploy command.

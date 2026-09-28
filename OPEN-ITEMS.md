@@ -30,11 +30,11 @@ request, and consider a personal tap then.
 
 - [x] 2026-09-28 DONE: v1.1.1 fixes the two history bugs a launch audience would see.
 - [x] 2026-09-28 DONE: site header no longer wraps at phone width (pushed to main).
-- [ ] 2026-09-28 NEEDS-BOSS: deploy the site on Cloudflare Pages (his login; Claude drives).
+- [x] 2026-09-28 DONE: site live at https://redbuttonquit.com and www, as a Cloudflare Worker with static assets. See site/CLAUDE.md → Deployment.
 - [ ] 2026-09-28 Record a 10-second demo clip for the launch post (needs BOSS's go-ahead,
   since recording uses his screen).
 - [ ] 2026-09-28 Social preview image, 1200x630, for link shares.
-- [ ] 2026-09-28 After the site is live: set the GitHub repo website field and topics.
+- [x] 2026-09-28 DONE: GitHub repo website field set to redbuttonquit.com; seven topics added.
 - [ ] 2026-09-28 NEEDS-BOSS: write and post once — r/macapps or Show HN.
 
 ## Quit history validation after review
@@ -103,9 +103,8 @@ lapses. The Cloudflare transfer fixes this permanently: it adds a year (to
   **2027-12-29**, and auto-renew should be on in Cloudflare → Registrations.
   If it still reads PDR after 2026-10-05, open a Cloudflare support ticket —
   the manual-renew expiry of 2026-12-29 is the real deadline.
-- [ ] 2026-09-28 NEEDS-BOSS: Deploy the site (Pages settings below). The zone
-  has been Active since 2026-08-20; this step never happened. The app's About
-  link to redbuttonquit.com stays dead until it does.
+- [x] 2026-09-28 DONE: Site deployed. The app's About link to redbuttonquit.com
+  works now, in every shipped version, with no release needed.
 
 **Whois Verification reads "Verified"** as of 2026-08-20, confirming the
 January suspension is fully resolved at the registrar, not just at the registry.

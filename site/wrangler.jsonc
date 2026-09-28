@@ -1,0 +1,14 @@
+{
+  // redbuttonquit.com — static site served as a Cloudflare Worker with static
+  // assets. Deploy from this directory with `npx wrangler deploy`.
+  // .assetsignore keeps CLAUDE.md and this file off the public site.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "redbuttonquit",
+  "compatibility_date": "2026-09-26",
+  "observability": { "enabled": true },
+  "assets": { "directory": "." },
+  "routes": [
+    { "pattern": "redbuttonquit.com", "custom_domain": true },
+    { "pattern": "www.redbuttonquit.com", "custom_domain": true }
+  ]
+}

@@ -69,3 +69,6 @@ release/
 # Environment
 .env
 .env.local
+
+# Wrangler local state
+.wrangler/
