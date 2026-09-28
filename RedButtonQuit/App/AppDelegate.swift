@@ -9,6 +9,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var permissionPollTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // The test host only needs to load the module. Starting services would open onboarding
+        // in front of the user and touch the Accessibility API on every test run.
+        guard !AccessibilityMonitor.isTestHost else { return }
+
         #if DEBUG
         print("AppDelegate: applicationDidFinishLaunching started")
         #endif
@@ -60,17 +64,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.accessibilityMonitor = monitor
     }
 
-    /// True when this process is the XCTest host rather than a real launch.
-    private var isRunningTests: Bool {
-        let env = ProcessInfo.processInfo.environment
-        return env["XCTestConfigurationFilePath"] != nil || env["XCTestBundlePath"] != nil
-    }
-
     private func checkAccessibilityPermission() {
-        // Never ask during a test run. The prompt adds a TCC row for the test host, which shows
-        // up in System Settings under the same name as the real app — users delete the wrong one.
-        guard !isRunningTests else { return }
-
         let trusted = AccessibilityMonitor.isAccessibilityEnabled()
 
         if trusted {

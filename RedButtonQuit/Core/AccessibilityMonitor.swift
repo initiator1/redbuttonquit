@@ -32,9 +32,26 @@ final class AccessibilityMonitor {
 
     // MARK: - Static Methods
 
+    /// True when this process is the XCTest host rather than a real launch.
+    static var isTestHost: Bool {
+        let env = ProcessInfo.processInfo.environment
+        return env["XCTestConfigurationFilePath"] != nil || env["XCTestBundlePath"] != nil
+    }
+
+    /// Test runs opt in to real Accessibility calls with `TEST_RUNNER_RBQ_LIVE_AX_TESTS=1`.
+    static var liveAccessibilityTestsEnabled: Bool {
+        ProcessInfo.processInfo.environment["RBQ_LIVE_AX_TESTS"] == "1"
+    }
+
     /// Check if accessibility permission is granted
     /// Uses actual API test instead of AXIsProcessTrusted() which can return stale cached results
     static func isAccessibilityEnabled() -> Bool {
+        // The ad-hoc signed test host gets a new code hash on every build, so any Accessibility
+        // call registers it with TCC again and macOS re-prompts the user. Stay out of TCC
+        // unless a live run asked for it.
+        if isTestHost && !liveAccessibilityTestsEnabled {
+            return false
+        }
         // First try the real functionality test - this is the most reliable
         if isAccessibilityActuallyWorking() {
             return true
@@ -85,6 +102,7 @@ final class AccessibilityMonitor {
 
     /// Prompt user for accessibility permission
     static func requestAccessibilityPermission() {
+        guard !isTestHost else { return }
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         AXIsProcessTrustedWithOptions(options)
     }

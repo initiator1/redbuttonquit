@@ -63,18 +63,20 @@ final class AccessibilityMonitorTests: XCTestCase {
 
     // MARK: - Permission Check Tests
 
-    func testIsAccessibilityEnabledReturnsBoolean() {
-        // This test verifies the method doesn't crash and returns a boolean
-        let result = AccessibilityMonitor.isAccessibilityEnabled()
-
-        // Result should be either true or false
-        XCTAssertTrue(result == true || result == false)
+    func testTestHostStaysOutOfAccessibilityByDefault() throws {
+        try XCTSkipIf(AccessibilityMonitor.liveAccessibilityTestsEnabled, "Live Accessibility run")
+        XCTAssertTrue(AccessibilityMonitor.isTestHost)
+        XCTAssertFalse(AccessibilityMonitor.isAccessibilityEnabled())
     }
 
     // MARK: - Window Type Detection Tests
     // Note: These tests require running apps and accessibility permission
 
     func testGetWindowCountForFinderReturnsNonNegative() throws {
+        try XCTSkipUnless(
+            AccessibilityMonitor.liveAccessibilityTestsEnabled,
+            "Set TEST_RUNNER_RBQ_LIVE_AX_TESTS=1 to run against real Accessibility"
+        )
         guard AccessibilityMonitor.isAccessibilityEnabled() else {
             throw XCTSkip("Accessibility permission not granted")
         }

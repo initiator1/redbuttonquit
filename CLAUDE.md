@@ -168,10 +168,16 @@ the real app's. Users delete the wrong one — that is how KI-003 gets triggered
 the Debug `TEST_HOST` points at `RedButtonQuitDebug.app`. Any row labeled `RedButtonQuit.app` is
 now unambiguously the real app.
 
-Merely skipping the permission prompt under XCTest is **not** sufficient: any Accessibility API
-call registers the caller with TCC, and `isAccessibilityEnabled()` probes Finder. The test host
-will keep appearing, which is why `make test` clears its row afterwards. `AppDelegate` still
-skips the prompt under XCTest so no permission dialog interrupts a test run.
+**KI-007: Test runs re-prompted for the Debug app — fixed 2026-09-28.** The Debug app was
+ad-hoc signed, so TCC pinned its grant to one cdhash and every rebuild asked again, while the
+toggle still read on. Two fixes, both needed: Debug (app and test targets) is signed with
+`Apple Development: Douglas Baker (PHQ74HFWFP)`, team `MDWFZC6396`, so the grant is
+identity-based; and the test host never touches TCC. `AppDelegate` returns immediately under
+XCTest (no services, no onboarding window), and `AccessibilityMonitor.isAccessibilityEnabled()`
+returns false in the test host without calling any AX API. Verified: a test run starting with no
+Debug row leaves no row. Live AX tests opt in with `TEST_RUNNER_RBQ_LIVE_AX_TESTS=1`. `make test`
+no longer runs `tccutil reset`; it would only wipe a Debug grant given on purpose. The Apple
+Development certificate expires 2027-02-03.
 
 **KI-005: Helper Processes Entered Quit History — fixed for 1.1.1**
 Startup observer setup filtered by activation policy, but the workspace launch path called
@@ -190,9 +196,9 @@ cancelled pending quit.
 ## Testing Notes
 
 - The Debug app/test host builds as `RedButtonQuitDebug.app` with bundle ID `com.redbuttonquit.app.debug`, keeping both its TCC record and its Accessibility-list label distinct from the installed Release app
-- `make test` clears the test host's Accessibility row after the run; `xcodebuild test` on its own leaves it behind
+- The test host never calls the Accessibility API, so test runs create no TCC row and never prompt (KI-007)
 - Tests use isolated `UserDefaults` suites and never alter the live app's preferences or login item
-- The real Finder Accessibility test is skipped when the test host lacks permission; the remaining window-classification tests still run
+- The real Finder Accessibility test runs only with `TEST_RUNNER_RBQ_LIVE_AX_TESTS=1 xcodebuild test ...` and a granted Debug app; the remaining window-classification tests always run
 - `AppTerminationServiceTests` validates protected apps cannot be terminated (uses real `NSRunningApplication` instances — Finder, Dock)
 - `PreferencesManagerTests` and `AccessibilityMonitorTests` also exist
 - `QuitHistoryStoreTests` use temporary directories and isolated `UserDefaults` suites
@@ -207,9 +213,9 @@ Developer ID certificates share team `MDWFZC6396` — one for Douglas Baker, one
 LLC — so both the project's `CODE_SIGN_IDENTITY[sdk=macosx*]` and `exportOptions.plist`
 `signingCertificate` name the LLC identity in full. Naming only the team would pick either one.
 
-Debug stays ad-hoc ("Sign to Run Locally") so Xcode can attach a debugger; hardened runtime plus
-Developer ID would block that. Its permission churn no longer matters, since it installs under a
-different name and bundle ID (KI-004).
+Debug is signed with `Apple Development: Douglas Baker (PHQ74HFWFP)` (team `MDWFZC6396`), named in
+full, so its Accessibility grant survives rebuilds (KI-007). Xcode adds `get-task-allow` to Debug,
+so the debugger still attaches.
 
 `make export` produces the distributable: hardened runtime, secure timestamp, and a signature
 that satisfies its own designated requirement. Verify with `codesign --verify --strict -vv`
