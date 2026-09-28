@@ -5,6 +5,38 @@ before archiving it. The app itself is SHIPPED: v1.0.0 is live on GitHub,
 notarized, verified by downloading from the public URL and checking the
 notarization ticket survived the round trip.
 
+## v1.1.1 released 2026-09-28
+
+Published https://github.com/initiator1/redbuttonquit/releases/tag/v1.1.1 —
+notarized and stapled (app and DMG), public download re-verified, installed,
+TCC auth 2, TextEdit quit and was recorded as a confirmed quit on macOS 27.0.
+
+- [ ] 2026-09-28 Confirm the helper fix in real use. The new build started
+  2026-09-28T05:48:46Z. Every history entry after that should be a real app.
+  Check `~/Library/Application Support/RedButtonQuit/history.json`: no
+  `openAndSavePanelService`, `ThemeWidgetControlViewService`,
+  `*-Settings.extension`, or `WebKit.WebContent` entries after that time.
+  Not tested directly because forcing a file dialog takes over BOSS's screen.
+- [ ] 2026-09-28 Watch whether Chrome still produces "cancelled" entries. The
+  fix counts windows at the moment one closes; with exactly two windows open
+  the count can land early and let a few false entries through. Acceptable if
+  rare; if Chrome still logs dozens a day, revisit.
+
+## Launch checklist (option C, decided 2026-09-28)
+
+Council decision: skip official Homebrew (self-submission needs 225 stars; the
+repo has 4). Build traction first; revisit Homebrew at 75 stars or on a user
+request, and consider a personal tap then.
+
+- [x] 2026-09-28 DONE: v1.1.1 fixes the two history bugs a launch audience would see.
+- [x] 2026-09-28 DONE: site header no longer wraps at phone width (pushed to main).
+- [ ] 2026-09-28 NEEDS-BOSS: deploy the site on Cloudflare Pages (his login; Claude drives).
+- [ ] 2026-09-28 Record a 10-second demo clip for the launch post (needs BOSS's go-ahead,
+  since recording uses his screen).
+- [ ] 2026-09-28 Social preview image, 1200x630, for link shares.
+- [ ] 2026-09-28 After the site is live: set the GitHub repo website field and topics.
+- [ ] 2026-09-28 NEEDS-BOSS: write and post once — r/macapps or Show HN.
+
 ## Quit history validation after review
 
 Added 2026-08-19. The quit history change is uncommitted on
