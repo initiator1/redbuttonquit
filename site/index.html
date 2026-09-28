@@ -100,6 +100,12 @@ a{color:inherit}
 .mast nav{display:flex;gap:1.6rem;font-size:.875rem;color:var(--bone-dim)}
 .mast nav a{text-decoration:none}
 .mast nav a:hover{color:var(--bone)}
+/* Narrow screens: four links wrapped onto two lines and crowded the mark.
+   Keep the two a first-time visitor acts on; the page itself scrolls to the rest. */
+@media(max-width:700px){
+  .mast nav{gap:1.1rem}
+  .mast nav a[href="#how"],.mast nav a[href="#record"]{display:none}
+}
 
 /* ---------- hero ---------- */
 .hero{display:grid;gap:clamp(2.5rem,5vw,4rem);grid-template-columns:1fr;align-items:center}
