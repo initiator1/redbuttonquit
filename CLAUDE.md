@@ -172,9 +172,12 @@ now unambiguously the real app.
 ad-hoc signed, so TCC pinned its grant to one cdhash and every rebuild asked again, while the
 toggle still read on. Two fixes, both needed: Debug (app and test targets) is signed with
 `Apple Development: Douglas Baker (PHQ74HFWFP)`, team `MDWFZC6396`, so the grant is
-identity-based; and the test host never touches TCC. `AppDelegate` returns immediately under
-XCTest (no services, no onboarding window), and `AccessibilityMonitor.isAccessibilityEnabled()`
-returns false in the test host without calling any AX API. Verified: a test run starting with no
+identity-based; and Xcode-hosted processes never touch TCC. That means the XCTest host **and the
+SwiftUI preview host** (`XCODE_RUNNING_FOR_PREVIEWS=1`), which Xcode relaunches as a full app
+after every edit while the project is open; the preview host was the source of the prompts that
+survived the first fix. `AppDelegate` returns immediately when `isHostedByXcode` (no services, no
+onboarding window), and `AccessibilityMonitor.isAccessibilityEnabled()` returns false there
+without calling any AX API. Verified: a test run starting with no
 Debug row leaves no row. Live AX tests opt in with `TEST_RUNNER_RBQ_LIVE_AX_TESTS=1`. `make test`
 no longer runs `tccutil reset`; it would only wipe a Debug grant given on purpose. The Apple
 Development certificate expires 2027-02-03.

@@ -9,9 +9,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var permissionPollTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // The test host only needs to load the module. Starting services would open onboarding
-        // in front of the user and touch the Accessibility API on every test run.
-        guard !AccessibilityMonitor.isTestHost else { return }
+        // Test and preview hosts only need the module. Starting services would open onboarding
+        // in front of the user and touch the Accessibility API on every test run or preview.
+        guard !AccessibilityMonitor.isHostedByXcode else { return }
 
         #if DEBUG
         print("AppDelegate: applicationDidFinishLaunching started")
