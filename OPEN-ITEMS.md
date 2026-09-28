@@ -209,11 +209,11 @@ unlocks the extra tools, no monthly charge), and Gold ($12/month, 0% fee). The
 advanced tier is the "Get all of Ko-fi" toggle on the Payment settings tab, and
 it costs 5% of every tip rather than a subscription. It is reversible.
 
-**The "Get all of Ko-fi" toggle is OFF.** Verified directly in BOSS's Payment
-settings on 2026-08-20, after a sibling session reported he had switched
-Contributor on. He has not. Do not tell him the tag is recording anything, and
-do not repeat another session's claim about his account state without looking —
-this one costs 5% of every tip.
+**The "Get all of Ko-fi" toggle is ON** as of 2026-09-27, verified in BOSS's
+Payment settings after a reload. His first attempt had not saved (it showed OFF on
+2026-08-20); the second did. It costs 5% of tip income, and it enables the GA4
+integration, so the `?app=` tags can now be read once GA4 is connected. GA4 itself
+is not connected yet.
 
 **GitHub Sponsors is not enabled, and the Sponsor button was silently dead.**
 Found 2026-08-20 by the unstray session, confirmed here: `.github/FUNDING.yml`
