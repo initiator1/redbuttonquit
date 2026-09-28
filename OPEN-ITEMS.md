@@ -40,9 +40,11 @@ request, and consider a personal tap then.
   hero), with a ~3s labeled real capture of TextEdit quitting in the middle. Remotion is the
   fallback (free for firms of 3 or fewer). No AI video generators: they invent UI. Required
   spend $0; optional music via ElevenLabs Starter, $6/mo.
-- [ ] 2026-09-27 NEEDS-BOSS: three calls for the launch clip. (1) OK to record one TextEdit
-  window on his Mac for ~10s. (2) Silent or $6 ElevenLabs music. (3) Tone: cheeky terminal
-  lines or calm instrument-panel.
+- [x] 2026-09-27 DONE: launch clip calls. Recording approved (one TextEdit window, ~10s).
+  Silent, no music spend. Tone: council picked the hybrid, dry "dear macOS," terminal lines in
+  the site's instrument-panel look (~65% confidence; BOSS can override with A or B).
+- [ ] 2026-09-27 Build the ~22s HyperFrames draft of the hybrid tone, record the TextEdit
+  segment, render 16:9 and square, and export the end card as the 1200x630 social preview.
 - [ ] 2026-09-28 Social preview image, 1200x630, for link shares.
 - [x] 2026-09-28 DONE: GitHub repo website field set to redbuttonquit.com; seven topics added.
 - [ ] 2026-09-28 NEEDS-BOSS: write and post once — r/macapps or Show HN.
