@@ -65,7 +65,7 @@ final class AccessibilityMonitorTests: XCTestCase {
 
     func testTestHostStaysOutOfAccessibilityByDefault() throws {
         try XCTSkipIf(AccessibilityMonitor.liveAccessibilityTestsEnabled, "Live Accessibility run")
-        XCTAssertTrue(AccessibilityMonitor.isTestHost)
+        XCTAssertTrue(AccessibilityMonitor.isHostedByXcode)
         XCTAssertFalse(AccessibilityMonitor.isAccessibilityEnabled())
     }
 
