@@ -43,6 +43,10 @@ request, and consider a personal tap then.
 - [x] 2026-09-27 DONE: launch clip calls. Recording approved (one TextEdit window, ~10s).
   Silent, no music spend. Tone: council picked the hybrid, dry "dear macOS," terminal lines in
   the site's instrument-panel look (~65% confidence; BOSS can override with A or B).
+- [x] 2026-09-28 DONE: v1.1.2 released with the red close-button icon (notarized DMG on GitHub, site version line updated and deployed).
+- [x] 2026-09-28 DONE: Debug permission prompts stopped (KI-007 in CLAUDE.md): Debug signs with the Apple Development cert and the test host never touches TCC.
+- [ ] 2026-09-28 Clock: the Apple Development certificate that signs Debug builds expires 2027-02-03. Renew before then or Debug permission prompts return.
+- [ ] 2026-09-28 Visual review of the Settings and onboarding windows (not yet looked at; not in the launch clip).
 - [ ] 2026-09-27 Build the ~22s HyperFrames draft of the hybrid tone, record the TextEdit
   segment, render 16:9 and square, and export the end card as the 1200x630 social preview.
 - [ ] 2026-09-28 Social preview image, 1200x630, for link shares.

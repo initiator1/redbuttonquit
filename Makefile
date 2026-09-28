@@ -113,9 +113,6 @@ test:
 	xcodebuild test -project $(PROJECT) \
 		-scheme $(SCHEME) \
 		-destination 'platform=macOS'
-	@# The test host touches the Accessibility API, which leaves it in the Accessibility
-	@# list. Clear it so only the real app is ever listed there.
-	@tccutil reset Accessibility com.redbuttonquit.app.debug >/dev/null 2>&1 || true
 
 # Archive for distribution
 archive:
