@@ -5,16 +5,18 @@ All notable changes to RedButtonQuit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] 1.1.1
-
-### Fixed
-- Prevent extension, XPC, and system framework helper processes from receiving window observers or entering quit history.
-- Record a cancelled quit in `lastWindow` mode only when the destroyed window was the app's last user-facing window. `anyWindow` mode keeps recording cancellations.
+## [Unreleased]
 
 ### Planned
 - Undo quit feature with grace period
 - Per-app delay settings
 - Keyboard shortcut for quick toggle
+
+## [1.1.1] - 2026-09-28
+
+### Fixed
+- Prevent extension, XPC, and system framework helper processes from receiving window observers or entering quit history.
+- Record a cancelled quit in `lastWindow` mode only when the destroyed window was the app's last user-facing window. `anyWindow` mode keeps recording cancellations.
 
 ## [1.1.0] - 2026-08-19
 
@@ -70,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/initiator1/redbuttonquit/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/initiator1/redbuttonquit/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/initiator1/redbuttonquit/releases/tag/v1.1.1
 [1.1.0]: https://github.com/initiator1/redbuttonquit/releases/tag/v1.1.0
 [1.0.0]: https://github.com/initiator1/redbuttonquit/releases/tag/v1.0.0
