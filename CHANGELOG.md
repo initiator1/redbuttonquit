@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Per-app delay settings
 - Keyboard shortcut for quick toggle
 
+## [1.1.2] - 2026-09-28
+
+### Changed
+- New app icon: the red macOS close button. On macOS 26 and later it uses the system's layered icon format, so it follows the Dock's light, dark and tinted styles. macOS 14 and 15 get a matching classic icon.
+- The menu item "Preferences..." is now "Settings…", matching current macOS naming.
+
 ## [1.1.1] - 2026-09-28
 
 ### Fixed
