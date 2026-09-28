@@ -393,23 +393,20 @@ Since we cannot use App Store automatic updates, we must implement:
 
 #### RedQuits (by Carsten Mielke)
 
-**Status:** Legacy, Intel-only
-**Approach:** Accessibility API
-**Limitations:**
-- Not updated for Apple Silicon (runs via Rosetta)
-- No native ARM build
-- Minimal UI/configuration options
-- Unclear maintenance status
+**Status (checked 2026-09-28):** Active. Version 2.0, updated 2026-01-13. Free,
+closed source, on Homebrew (`brew install --cask redquits`). The earlier note here
+said "legacy, Intel-only, unclear maintenance"; that is no longer true.
 
-**Our Differentiation:**
-- Native Universal Binary (Apple Silicon + Intel)
-- Modern SwiftUI interface
-- Active maintenance commitment
-- Enhanced configuration options
+#### Last Window Quits (lawand.io)
+
+**Status (checked 2026-09-28):** Free, closed source, on Homebrew. Version 1.1.4.
+Keeps text logs of window-close and quit events, so a log is not unique to
+RedButtonQuit. Its own page says it does not work on macOS 15.
 
 #### Swift Quit
 
-**Status:** Active, Modern
+**Status (checked 2026-09-28):** Open source (GPL-3.0). Upstream's last release was
+v1.5 in March 2023; community forks rebuild it since.
 **Approach:** Accessibility API
 **Features:**
 - Configurable app lists
@@ -418,7 +415,7 @@ Since we cannot use App Store automatic updates, we must implement:
 
 **Our Differentiation:**
 - Fully open source (trust through transparency)
-- Homebrew distribution
+- Actively maintained and notarized, unlike the stale upstream
 - Focus on simplicity (Swift Quit may have feature bloat)
 - Potentially different UX philosophy
 
@@ -443,8 +440,8 @@ Since we cannot use App Store automatic updates, we must implement:
 2. **Modern Stack:** Swift 5.9+, SwiftUI, targeting current macOS
 3. **Universal Binary:** Native on all Macs
 4. **Minimal Footprint:** No resource bloat
-5. **Simple Distribution:** Homebrew and direct download
-6. **Privacy First:** No analytics, no network calls except updates
+5. **Simple Distribution:** Direct, notarized download. Not on official Homebrew: self-submission needs 225 stars (Homebrew Package Acceptance Policy, checked 2026-09-28).
+6. **Privacy First:** No analytics and no networking code at all
 
 ---
 
