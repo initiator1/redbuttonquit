@@ -10,10 +10,18 @@ struct HistoryView: View {
         var id: String { rawValue }
     }
 
-    @ObservedObject private var history = QuitHistoryStore.shared
-    @ObservedObject private var preferences = PreferencesManager.shared
+    @ObservedObject private var history: QuitHistoryStore
+    @ObservedObject private var preferences: PreferencesManager
     @State private var filter: HistoryFilter = .all
     @State private var isConfirmingClear = false
+
+    init(
+        history: QuitHistoryStore = .shared,
+        preferences: PreferencesManager = .shared
+    ) {
+        self._history = ObservedObject(wrappedValue: history)
+        self._preferences = ObservedObject(wrappedValue: preferences)
+    }
 
     private var filteredEvents: [QuitEvent] {
         history.events.filter { event in
@@ -114,6 +122,16 @@ struct HistoryView: View {
             return "Cancelled quits, exclusions, apps still running, and failures will appear here."
         }
     }
+}
+
+#Preview("Empty History") {
+    let directory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("RedButtonQuit-HistoryPreview-\(UUID().uuidString)", isDirectory: true)
+    HistoryView(
+        history: QuitHistoryStore(directoryURL: directory, preferences: .shared),
+        preferences: .shared
+    )
+    .frame(width: 560, height: 500)
 }
 
 private struct QuitHistoryRow: View {

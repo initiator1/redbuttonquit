@@ -7,7 +7,12 @@ final class WindowEventHandler {
 
     private let terminationService: AppTerminationService
     private let history: QuitHistoryStore
-    private var pendingQuitTokens: [pid_t: UUID] = [:]
+    private struct PendingQuit {
+        let token: UUID
+        let shouldRecordCancellation: Bool
+    }
+
+    private var pendingQuits: [pid_t: PendingQuit] = [:]
     private var terminationConfirmationTokens: [UUID: UUID] = [:]
 
     private enum Constants {
@@ -48,17 +53,34 @@ final class WindowEventHandler {
 
         // Check quit mode
         let mode = PreferencesManager.shared.quitMode
+        let shouldRecordCancellation: Bool
+
+        switch mode {
+        case .anyWindow:
+            shouldRecordCancellation = true
+        case .lastWindow:
+            shouldRecordCancellation = WindowInspector.snapshot(for: app)
+                .canProveNoOtherUserFacingWindows(afterDestroying: destroyedElementKind)
+        }
 
         switch mode {
         case .anyWindow:
             // Quit on any real window close, but allow fullscreen/window-mode
             // transitions to recreate their window first.
-            scheduleQuitAfterWindowReplacementGracePeriod(for: app, mode: mode)
+            scheduleQuitAfterWindowReplacementGracePeriod(
+                for: app,
+                mode: mode,
+                shouldRecordCancellation: shouldRecordCancellation
+            )
 
         case .lastWindow:
             // Only quit if this was the last window after transient
             // fullscreen/window-mode replacements have had time to settle.
-            scheduleQuitAfterWindowReplacementGracePeriod(for: app, mode: mode)
+            scheduleQuitAfterWindowReplacementGracePeriod(
+                for: app,
+                mode: mode,
+                shouldRecordCancellation: shouldRecordCancellation
+            )
         }
     }
 
@@ -83,16 +105,20 @@ final class WindowEventHandler {
 
     private func scheduleQuitAfterWindowReplacementGracePeriod(
         for app: NSRunningApplication,
-        mode: PreferencesManager.QuitMode
+        mode: PreferencesManager.QuitMode,
+        shouldRecordCancellation: Bool
     ) {
         let pid = app.processIdentifier
         let token = UUID()
-        pendingQuitTokens[pid] = token
+        pendingQuits[pid] = PendingQuit(
+            token: token,
+            shouldRecordCancellation: shouldRecordCancellation
+        )
 
         DispatchQueue.main.asyncAfter(deadline: .now() + Constants.windowReplacementGracePeriod) { [weak self] in
             guard let self else { return }
-            guard self.pendingQuitTokens[pid] == token else { return }
-            self.pendingQuitTokens[pid] = nil
+            guard self.pendingQuits[pid]?.token == token else { return }
+            self.pendingQuits[pid] = nil
 
             switch mode {
             case .anyWindow:
@@ -106,7 +132,8 @@ final class WindowEventHandler {
 
     private func cancelPendingQuitCheck(for app: NSRunningApplication) {
         let pid = app.processIdentifier
-        guard pendingQuitTokens.removeValue(forKey: pid) != nil else { return }
+        guard let pendingQuit = pendingQuits.removeValue(forKey: pid),
+              pendingQuit.shouldRecordCancellation else { return }
         guard let bundleID = app.bundleIdentifier else { return }
         guard !PreferencesManager.shared.isExcluded(bundleIdentifier: bundleID) else { return }
 

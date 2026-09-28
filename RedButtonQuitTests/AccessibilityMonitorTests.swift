@@ -3,6 +3,64 @@ import XCTest
 
 final class AccessibilityMonitorTests: XCTestCase {
 
+    func testObservationFilterAcceptsRegularApplicationBundle() {
+        XCTAssertTrue(AccessibilityMonitor.isEligibleForObservation(
+            activationPolicy: .regular,
+            bundleURL: URL(fileURLWithPath: "/Applications/Example.app"),
+            executableURL: URL(fileURLWithPath: "/Applications/Example.app/Contents/MacOS/Example"),
+            packageType: "APPL"
+        ))
+    }
+
+    func testObservationFilterRejectsNonRegularProcesses() {
+        for policy in [NSApplication.ActivationPolicy.accessory, .prohibited] {
+            XCTAssertFalse(AccessibilityMonitor.isEligibleForObservation(
+                activationPolicy: policy,
+                bundleURL: URL(fileURLWithPath: "/Applications/Example.app"),
+                executableURL: URL(fileURLWithPath: "/Applications/Example.app/Contents/MacOS/Example"),
+                packageType: "APPL"
+            ))
+        }
+    }
+
+    func testObservationFilterRejectsExtensionAndXPCBundleLocations() {
+        let locations = [
+            "/System/Library/ExtensionKit/Extensions/Settings.appex",
+            "/Applications/Example.app/Contents/PlugIns/Widget.appex",
+            "/System/Library/Frameworks/AppKit.framework/XPCServices/Panel.xpc"
+        ]
+
+        for path in locations {
+            XCTAssertFalse(AccessibilityMonitor.isEligibleForObservation(
+                activationPolicy: .regular,
+                bundleURL: URL(fileURLWithPath: path),
+                executableURL: URL(fileURLWithPath: path + "/Contents/MacOS/Helper"),
+                packageType: "APPL"
+            ), "Should reject helper bundle at \(path)")
+        }
+    }
+
+    func testObservationFilterRejectsNonApplicationPackageAndFrameworkExecutable() {
+        XCTAssertFalse(AccessibilityMonitor.isEligibleForObservation(
+            activationPolicy: .regular,
+            bundleURL: URL(fileURLWithPath: "/Applications/Example.app"),
+            executableURL: URL(fileURLWithPath: "/Applications/Example.app/Contents/MacOS/Example"),
+            packageType: "XPC!"
+        ))
+        XCTAssertFalse(AccessibilityMonitor.isEligibleForObservation(
+            activationPolicy: .regular,
+            bundleURL: URL(fileURLWithPath: "/Applications/Example.app"),
+            executableURL: URL(fileURLWithPath: "/System/Library/Frameworks/WebKit.framework/XPCServices/WebContent.xpc/Contents/MacOS/WebContent"),
+            packageType: "APPL"
+        ))
+        XCTAssertFalse(AccessibilityMonitor.isEligibleForObservation(
+            activationPolicy: .regular,
+            bundleURL: nil,
+            executableURL: nil,
+            packageType: nil
+        ))
+    }
+
     // MARK: - Permission Check Tests
 
     func testIsAccessibilityEnabledReturnsBoolean() {
@@ -67,6 +125,33 @@ final class AccessibilityMonitorTests: XCTestCase {
         )
 
         XCTAssertTrue(snapshot.canProveNoUserFacingWindows)
+    }
+
+    func testDestroyedWindowIsRemovedFromSnapshotBeforeCancellationDecision() {
+        let snapshot = WindowInspector.AppWindowSnapshot(
+            accessibilityStandardWindowCount: 1,
+            onScreenWindowCount: 1
+        )
+
+        XCTAssertTrue(snapshot.canProveNoOtherUserFacingWindows(afterDestroying: .standard))
+    }
+
+    func testOtherWindowsPreventMeaningfulCancellationRecord() {
+        let snapshot = WindowInspector.AppWindowSnapshot(
+            accessibilityStandardWindowCount: 2,
+            onScreenWindowCount: 2
+        )
+
+        XCTAssertFalse(snapshot.canProveNoOtherUserFacingWindows(afterDestroying: .standard))
+    }
+
+    func testUnavailableWindowSnapshotDoesNotRecordCancellation() {
+        let snapshot = WindowInspector.AppWindowSnapshot(
+            accessibilityStandardWindowCount: nil,
+            onScreenWindowCount: 0
+        )
+
+        XCTAssertFalse(snapshot.canProveNoOtherUserFacingWindows(afterDestroying: .standard))
     }
 
     func testOtherAXWindowCancelsFullscreenReplacementQuit() {

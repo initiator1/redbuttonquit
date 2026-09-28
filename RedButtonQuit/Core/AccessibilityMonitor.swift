@@ -156,7 +156,6 @@ final class AccessibilityMonitor {
 
         // Create observers for all currently running apps
         for app in NSWorkspace.shared.runningApplications {
-            guard app.activationPolicy == .regular else { continue }
             createObserver(for: app)
         }
 
@@ -215,6 +214,14 @@ final class AccessibilityMonitor {
     }
 
     private func createObserver(for app: NSRunningApplication) {
+        guard Self.isEligibleForObservation(
+            activationPolicy: app.activationPolicy,
+            bundleURL: app.bundleURL,
+            executableURL: app.executableURL,
+            packageType: app.bundleURL.flatMap { Bundle(url: $0) }
+                .flatMap { $0.object(forInfoDictionaryKey: "CFBundlePackageType") as? String }
+        ) else { return }
+
         let pid = app.processIdentifier
         guard pid > 0 else { return }
         guard appObservers[pid] == nil else { return }
@@ -258,6 +265,46 @@ final class AccessibilityMonitor {
 
         // Store observer
         appObservers[pid] = AppObserver(pid: pid, observer: observer, element: appElement)
+    }
+
+    static func isEligibleForObservation(
+        activationPolicy: NSApplication.ActivationPolicy,
+        bundleURL: URL?,
+        executableURL: URL?,
+        packageType: String?
+    ) -> Bool {
+        guard activationPolicy == .regular,
+              let bundleURL,
+              packageType == "APPL" else {
+            return false
+        }
+
+        let bundlePath = bundleURL.standardizedFileURL.path
+        let pathComponents = bundleURL.standardizedFileURL.pathComponents
+
+        // App extensions and XPC services can expose app-like identifiers and
+        // window events, but they are not user-launched applications.
+        if pathComponents.contains(where: { component in
+            let lowercased = component.lowercased()
+            return lowercased == "xpcservices" || lowercased == "plugins" ||
+                lowercased.hasSuffix(".appex") || lowercased.hasSuffix(".xpc")
+        }) {
+            return false
+        }
+
+        let systemFrameworkRoots = [
+            "/System/Library/Frameworks/",
+            "/System/Library/PrivateFrameworks/",
+            "/System/Library/ExtensionKit/Extensions/"
+        ]
+        let paths = [bundlePath, executableURL?.standardizedFileURL.path ?? ""]
+        guard !paths.contains(where: { path in
+            systemFrameworkRoots.contains(where: path.hasPrefix)
+        }) else {
+            return false
+        }
+
+        return true
     }
 
     private func removeObserver(for pid: pid_t) {

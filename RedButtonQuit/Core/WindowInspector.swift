@@ -3,7 +3,7 @@ import ApplicationServices
 
 /// Shared window inspection helpers for Accessibility and CoreGraphics state.
 enum WindowInspector {
-    enum WindowElementKind {
+    enum WindowElementKind: Equatable {
         case standard
         case otherWindow
         case nonWindow
@@ -39,6 +39,27 @@ enum WindowInspector {
 
         var canProveNoUserFacingWindows: Bool {
             accessibilityStandardWindowCount == 0 && onScreenWindowCount == 0
+        }
+
+        func canProveNoOtherUserFacingWindows(
+            afterDestroying destroyedWindowKind: WindowElementKind
+        ) -> Bool {
+            guard destroyedWindowKind.canRepresentClosedStandardWindow,
+                  let accessibilityCount = accessibilityStandardWindowCount,
+                  let onScreenCount = onScreenWindowCount else {
+                return false
+            }
+
+            // AX and CoreGraphics can still include the window that raised the
+            // destruction event. Remove that one from each count before testing.
+            let remainingAccessibilityCount = destroyedWindowKind == .standard
+                ? max(0, accessibilityCount - 1)
+                : accessibilityCount
+            let remainingOnScreenCount = destroyedWindowKind.isWindow
+                ? max(0, onScreenCount - 1)
+                : onScreenCount
+
+            return remainingAccessibilityCount == 0 && remainingOnScreenCount == 0
         }
     }
 

@@ -72,10 +72,10 @@ All three services are retained by `AppDelegate`. The monitor is the only compon
 
 ### Data Flow
 
-1. `AccessibilityMonitor` creates `AXObserver` per running app (`.regular` activation policy only), listens for `kAXUIElementDestroyedNotification` and `kAXWindowCreatedNotification`
-2. Also watches `NSWorkspace` notifications for app launch/terminate to add/remove observers dynamically
+1. `AccessibilityMonitor` sends startup apps and launched apps through the same eligibility check. It accepts only `.regular` apps with an `APPL` bundle outside extension, plug-in, XPC-service, and system-framework paths.
+2. Each accepted app gets an `AXObserver` for `kAXUIElementDestroyedNotification` and `kAXWindowCreatedNotification`. `NSWorkspace` launch/terminate notifications add or remove observers dynamically.
 3. On window destruction → `WindowEventHandler.handleWindowDestroyed()` checks: enabled? protected? quit mode?
-4. Both quit modes wait one second for transient fullscreen/playback window replacement; a newly created real `AXWindow` cancels the pending quit
+4. Both quit modes wait one second for transient fullscreen/playback window replacement; a newly created real `AXWindow` cancels the pending quit. History records that cancellation in `anyWindow` mode, or in `lastWindow` mode only when `WindowInspector` proves no other user-facing window remained after accounting for the destroyed window
 5. For `lastWindow`, `WindowInspector` requires both Accessibility and CoreGraphics to report zero user-facing windows
 6. At the quit decision, the handler checks the current user exclusion list and records excluded decisions
 7. If conditions are met → `AppTerminationService.terminateApp()` sends `NSRunningApplication.terminate()` with AppleScript fallback
@@ -172,6 +172,20 @@ call registers the caller with TCC, and `isAccessibilityEnabled()` probes Finder
 will keep appearing, which is why `make test` clears its row afterwards. `AppDelegate` still
 skips the prompt under XCTest so no permission dialog interrupts a test run.
 
+**KI-005: Helper Processes Entered Quit History — fixed for 1.1.1**
+Startup observer setup filtered by activation policy, but the workspace launch path called
+`createObserver` without that filter. macOS 27 reports the inspected settings extensions and
+Open/Save panel XPC service as accessory processes, and WebKit content processes as prohibited.
+The shared eligibility check now rejects non-regular processes and helper bundle structure,
+package types, and system framework paths before observer creation. Do not replace this with
+a bundle-identifier list.
+
+**KI-006: Routine Window Replacements Filled History — fixed for 1.1.1**
+In `lastWindow` mode, a replacement window cancels a pending check even when other windows
+remain open. The app still cancels the check as before, but it records the cancellation only
+when the destroyed window was the last user-facing window. `anyWindow` mode still records each
+cancelled pending quit.
+
 ## Testing Notes
 
 - The Debug app/test host builds as `RedButtonQuitDebug.app` with bundle ID `com.redbuttonquit.app.debug`, keeping both its TCC record and its Accessibility-list label distinct from the installed Release app
@@ -181,6 +195,7 @@ skips the prompt under XCTest so no permission dialog interrupts a test run.
 - `AppTerminationServiceTests` validates protected apps cannot be terminated (uses real `NSRunningApplication` instances — Finder, Dock)
 - `PreferencesManagerTests` and `AccessibilityMonitorTests` also exist
 - `QuitHistoryStoreTests` use temporary directories and isolated `UserDefaults` suites
+- `AccessibilityMonitorTests` cover helper-process eligibility and destroyed-window accounting for cancellation history
 - Real window monitoring tests are difficult to automate; manual testing recommended for accessibility features
 
 ## Code Signing

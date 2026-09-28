@@ -5,7 +5,11 @@ All notable changes to RedButtonQuit will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased] 1.1.1
+
+### Fixed
+- Prevent extension, XPC, and system framework helper processes from receiving window observers or entering quit history.
+- Record a cancelled quit in `lastWindow` mode only when the destroyed window was the app's last user-facing window. `anyWindow` mode keeps recording cancellations.
 
 ### Planned
 - Undo quit feature with grace period
