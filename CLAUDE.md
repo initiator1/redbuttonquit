@@ -105,6 +105,7 @@ All three services are retained by `AppDelegate`. The monitor is the only compon
 - **Debug logging**: `#if DEBUG print(...)` guards throughout — no logging framework
 - **Preference keys**: Fully qualified reverse-domain format (`com.redbuttonquit.isEnabled`)
 - **Protected apps**: Hardcoded in `PreferencesManager.systemProtectedApps` (static `Set<String>`)
+- **App icon**: `Resources/AppIcon.icon` (Icon Composer layers) is the primary icon on macOS 26+; `Assets.xcassets/AppIcon.appiconset` is the classic fallback for macOS 14-15 and must keep transparent margins (824 px body on a 1024 canvas). Never bake a rounded tile into the artwork. `site/icon-*.png` export from the classic set
 - **Error handling**: `AppTerminationService.TerminationError` enum with `LocalizedError` conformance
 
 ## Known Issues

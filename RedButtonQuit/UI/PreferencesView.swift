@@ -332,7 +332,7 @@ struct AppPickerView: View {
                 .padding(.horizontal)
 
             if selectedSource == .installed && isLoadingInstalledApps {
-                ProgressView("Scanning Applications...")
+                ProgressView("Scanning Applications…")
                     .controlSize(.small)
                     .padding(.horizontal)
             }
