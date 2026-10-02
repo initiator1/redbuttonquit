@@ -76,6 +76,16 @@ RedButtonQuit is a menu bar application that:
 
 ## 5. Distribution Strategy
 
+### Optional Support (2026-10-02)
+
+The app remains free and MIT licensed. Every feature works without payment.
+Optional support opens the existing Initiator Works Ko-fi page in the browser.
+The app menu and Settings → About expose the same product-tagged link as the
+website. The website keeps the free download prominent and offers a nearby tip
+link. Support controls do not collect payment data, add tracking, or prompt
+users during window-close handling. The tip amount belongs to Ko-fi settings,
+not a hardcoded price in the app or website.
+
 ### Critical Constraint: Mac App Store Incompatibility
 
 > **This application CANNOT be distributed through the Mac App Store.**
@@ -541,7 +551,9 @@ v1.5 in March 2023; community forks rebuild it since.
 
 ## 13. Open Questions
 
-1. **Monetization:** Free? Paid? Donation-ware? (Affects effort investment)
+1. **Monetization (resolved 2026-10-02):** Free and open source, with optional
+   support through the existing Ko-fi page. The shared default tip is $3, with a $1 minimum;
+   no feature requires payment.
 2. **Open Source License:** MIT? GPL? Apache 2.0? (Affects contribution model)
 3. **App Name:** "RedButtonQuit" vs alternatives (trademark search needed)
 4. **Website:** Need a landing page for direct download?

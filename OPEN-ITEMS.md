@@ -201,6 +201,65 @@ and confirmed working: TextEdit quit on last-window close and was recorded.
 
 ## Ko-fi is live
 
+**Current verification — 2026-10-02:** The live website renders and links to
+`https://ko-fi.com/initiatorworks?app=redbuttonquit`. The signed-in Ko-fi account
+is `initiatorworks`; its Payment settings report Stripe connected, USD currency,
+a $3 default tip and $1 minimum (changed with BOSS's approval on 2026-10-02). Monthly tips are available, but the default-to-
+monthly option is off. The Standard plan is active: no monthly fee, with a 5%
+Ko-fi fee on payments, plus payment processor fees. No payment was submitted;
+this verifies the displayed setup, not successful payment or payout.
+
+The app source includes support links in the menu and Settings → About. The website's support section appears
+after installation instructions. Both the live website and Ko-fi bio promise
+that the utilities stay free. Preserve that promise unless BOSS explicitly
+chooses a different offer.
+
+**Revenue implementation — 2026-10-02:** BOSS authorizes implementing the
+recommended order. Version 1.1.3 (build 6) adds a direct support link to the app
+menu and clear optional-tip copy in About. It is installed and running; signature,
+TCC grant, preference preservation, and login registration checks pass. The app
+and DMG are notarized and stapled. Previous app/data copies are in ignored
+`build/support-review/previous/`.
+
+The website changes are deployed: a tip link beside the free download and a
+product-specific support message. Desktop, phone (389 CSS pixels), link
+navigation, and a scripts-removed fallback check pass. The app remains free.
+The launch copy and 22-second demo sequence are in `implementation-notes.md`.
+BOSS explicitly approves all proposed work and publication on 2026-10-02.
+Cloudflare deployment `81613ec7-ecbc-4239-bdf0-090b15058db1` is live on both
+domains. `/CLAUDE.md` and `/wrangler.jsonc` return 404. GitHub release and launch
+post preparation continue on `codex/optional-support`.
+
+- [x] 2026-10-02 DONE: BOSS approves the shared Initiator Works Ko-fi default
+  change from $5 to $3. The saved settings and public form confirm $3. The $1
+  minimum and one-time default remain. No transaction is submitted.
+- [ ] 2026-10-02 Native acceptance: Computer Use times out for RedButtonQuit,
+  Control Center, and TextEdit. Owner: Codex after native control is available,
+  or BOSS for a brief manual check. An isolated render of the actual About view
+  passes; it is not installed interaction evidence. Done when the installed menu/About support
+  links render, the menu link reaches Ko-fi, and closing a blank TextEdit's last
+  window quits TextEdit. Release stays pending until these checks pass. Full-
+  display capture is rejected by automatic approval review because unrelated
+  private content could appear; narrow menu-bar strips are accepted instead.
+- [ ] 2026-10-02 Public rollout: Publication is explicitly approved. Website
+  support changes are live. Publish v1.1.3 after native acceptance. Complete the
+  launch in r/macapps' October App Pile thread, following its PCP format.
+  The main-feed trust requirements are not met; use the allowed monthly thread.
+  Use the existing launch work above for the real demo capture and trailer.
+  Current traffic, app-specific support conversion, and earnings are unknown.
+
+**Preview tooling defect — 2026-10-02:** `portmanager run redbuttonquit ...`
+fails with `unsupported command: [...]`. The run parser's positional `command`
+overwrites the subcommand field used by `main()` in the owning portmanager CLI.
+Owner: portmanager project; this defect is already tracked in that project's
+`OPEN-ITEMS.md`, so no duplicate obligation is filed. Fix by giving executable
+arguments a different destination from the selected subcommand, then verify
+`run`. No portmanager code
+is changed here. The safe preview loads `.portmanager/ports.env` directly and
+uses the claimed loopback port; sync and doctor pass. The site's preview
+instructions now show that env-backed path.
+
+**Historical setup (2026-08-19; current fee state is above):**
 Page: **ko-fi.com/initiatorworks**, claimed 2026-08-19. Stripe connected,
 Delaware ZIP matching the Stripe account, tips at 0% platform fee ("Get all of
 Ko-fi" left off deliberately — turning it on costs 5% of every tip).

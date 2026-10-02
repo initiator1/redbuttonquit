@@ -86,6 +86,8 @@ struct AppMenu: View {
             openSettings()
         }
 
+        Link("Support RedButtonQuit…", destination: URL(string: "https://ko-fi.com/initiatorworks?app=redbuttonquit")!)
+
         if !AccessibilityMonitor.isAccessibilityEnabled() {
             Button("Grant Accessibility Permission…") {
                 AccessibilityMonitor.beginPermissionRecovery()

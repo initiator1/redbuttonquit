@@ -503,10 +503,10 @@ struct AboutTab: View {
 
                 // Support link
                 VStack(spacing: 6) {
-                    Text("Like this app?")
+                    Text("Free and open source. Tips are optional.")
                         .font(.caption)
                         .fontWeight(.medium)
-                    Link("Buy me a coffee", destination: URL(string: "https://ko-fi.com/initiatorworks?app=redbuttonquit")!)
+                    Link("Support RedButtonQuit", destination: URL(string: "https://ko-fi.com/initiatorworks?app=redbuttonquit")!)
                         .font(.caption)
                 }
 
