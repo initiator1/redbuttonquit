@@ -31,10 +31,14 @@ request, and consider a personal tap then.
 - [x] 2026-09-28 DONE: v1.1.1 fixes the two history bugs a launch audience would see.
 - [x] 2026-09-28 DONE: site header no longer wraps at phone width (pushed to main).
 - [x] 2026-09-28 DONE: site live at https://redbuttonquit.com and www, as a Cloudflare Worker with static assets. See site/CLAUDE.md → Deployment.
-- [ ] 2026-09-28 Launch video for the post. BOSS asked whether a motion-designed trailer
+- [ ] 2026-09-28 Launch video for the post. Update 2026-10-02: the 9-second intro
+  and 5-second outro are rendered in landscape and square formats, and the social
+  preview is live. Real TextEdit and test-only history footage remain blocked by
+  native Computer Use; the assembler refuses a full trailer without them. See
+  `implementation-notes.md` for the commands and fixture verification. BOSS asked whether a motion-designed trailer
   (Remotion or paid tools; he is willing to pay) beats a plain screen recording, after
-  seeing Opus-made app trailers on X. Moved to its own thread 2026-09-28. Recording his
-  screen still needs his go-ahead.
+  seeing Opus-made app trailers on X. Moved to its own thread 2026-09-28.
+  BOSS approves the proposed capture and launch on 2026-10-02.
   2026-09-27 recommendation (page: https://claude.ai/artifact/DdgRPwTBnkNzF5XvzZUvgd): a
   ~22s motion trailer built in code with HyperFrames (Apache-2.0, plain HTML, reuses the site
   hero), with a ~3s labeled real capture of TextEdit quitting in the middle. Remotion is the
@@ -47,11 +51,14 @@ request, and consider a personal tap then.
 - [x] 2026-09-28 DONE: Debug permission prompts stopped (KI-007 in CLAUDE.md): Debug signs with the Apple Development cert and the test host never touches TCC.
 - [ ] 2026-09-28 Clock: the Apple Development certificate that signs Debug builds expires 2027-02-03. Renew before then or Debug permission prompts return.
 - [ ] 2026-09-28 Visual review of the Settings and onboarding windows (not yet looked at; not in the launch clip).
-- [ ] 2026-09-27 Build the ~22s HyperFrames draft of the hybrid tone, record the TextEdit
-  segment, render 16:9 and square, and export the end card as the 1200x630 social preview.
-- [ ] 2026-09-28 Social preview image, 1200x630, for link shares.
+- [ ] 2026-09-27 Complete the 22-second trailer with real TextEdit and history
+  footage. Update 2026-10-02: deterministic bookends and the assembler are ready;
+  16:9 and square assembly checks pass with labeled test fixtures. Capture remains
+  blocked by native Computer Use. The social preview is complete.
+- [x] 2026-10-02 DONE: Social preview image, 1200x630, deployed for link shares.
 - [x] 2026-09-28 DONE: GitHub repo website field set to redbuttonquit.com; seven topics added.
-- [ ] 2026-09-28 NEEDS-BOSS: write and post once — r/macapps or Show HN.
+- [x] 2026-10-02 DONE: Approved launch posted in r/macapps' October App Pile.
+  Public permalink and the 30-day promotion limit are recorded below.
 
 ## Quit history validation after review
 
@@ -118,7 +125,9 @@ lapses. The Cloudflare transfer fixes this permanently: it adds a year (to
   `whois redbuttonquit.com`: Registrar should read Cloudflare, expiry
   **2027-12-29**, and auto-renew should be on in Cloudflare → Registrations.
   If it still reads PDR after 2026-10-05, open a Cloudflare support ticket —
-  the manual-renew expiry of 2026-12-29 is the real deadline.
+  the manual-renew expiry of 2026-12-29 is the real deadline. Public WHOIS still
+  reports PDR, `pendingTransfer`, and expiry 2026-12-29 on 2026-10-02. Recheck
+  on 2026-10-03. Account auto-renew status remains unverified.
 - [x] 2026-09-28 DONE: Site deployed. The app's About link to redbuttonquit.com
   works now, in every shipped version, with no release needed.
 
@@ -226,9 +235,11 @@ product-specific support message. Desktop, phone (389 CSS pixels), link
 navigation, and a scripts-removed fallback check pass. The app remains free.
 The launch copy and 22-second demo sequence are in `implementation-notes.md`.
 BOSS explicitly approves all proposed work and publication on 2026-10-02.
-Cloudflare deployment `81613ec7-ecbc-4239-bdf0-090b15058db1` is live on both
-domains. `/CLAUDE.md` and `/wrangler.jsonc` return 404. GitHub release and launch
-post preparation continue on `codex/optional-support`.
+Cloudflare deployment `d40473cc-fcc9-446a-a9f8-54caec315535` is live on both
+domains. `/CLAUDE.md` and `/wrangler.jsonc` return 404. The new social preview
+is live and matches the local export. Changes are pushed in draft PR #7 on
+`codex/optional-support`. The notarized 1.1.3 DMG is uploaded to a GitHub draft
+release; it is not public latest yet. The existing v1.1.2 remains the download.
 
 - [x] 2026-10-02 DONE: BOSS approves the shared Initiator Works Ko-fi default
   change from $5 to $3. The saved settings and public form confirm $3. The $1
@@ -241,11 +252,18 @@ post preparation continue on `codex/optional-support`.
   window quits TextEdit. Release stays pending until these checks pass. Full-
   display capture is rejected by automatic approval review because unrelated
   private content could appear; narrow menu-bar strips are accepted instead.
-- [ ] 2026-10-02 Public rollout: Publication is explicitly approved. Website
-  support changes are live. Publish v1.1.3 after native acceptance. Complete the
-  launch in r/macapps' October App Pile thread, following its PCP format.
-  The main-feed trust requirements are not met; use the allowed monthly thread.
-  Use the existing launch work above for the real demo capture and trailer.
+- [x] 2026-10-02 DONE: Website support changes, shared $3 default, and social
+  preview are live. Publication is explicitly approved.
+- [x] 2026-10-02 DONE: Launch posted in r/macapps' October App Pile thread:
+  https://www.reddit.com/r/macapps/comments/1wuoav5/comment/pdettnn/
+  Full text is verified while signed out. It uses the required PCP format and
+  links to the existing v1.1.2 download through the website. Do not make another
+  promotional post in that community before 2026-11-01T13:43:34Z. Edit this
+  existing launch to add the real demo when ready.
+- [ ] 2026-10-02 Publish v1.1.3 after native acceptance, then update the website
+  version line, finish/merge draft PR #7, and verify a public DMG download.
+  Publication is authorized; no further approval is required for this sequence.
+  The real demo/trailer remains in the existing launch item above.
   Current traffic, app-specific support conversion, and earnings are unknown.
 
 **Preview tooling defect — 2026-10-02:** `portmanager run redbuttonquit ...`

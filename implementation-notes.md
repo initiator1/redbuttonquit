@@ -35,6 +35,11 @@
 
 ### Launch copy for r/macapps' October App Pile
 
+Posted 2026-10-02T13:43:34Z as `involvrnet`:
+https://www.reddit.com/r/macapps/comments/1wuoav5/comment/pdettnn/
+The full text is verified from a signed-out session. This counts toward the
+community's 30-day promotion limit; next eligible promotion is 2026-11-01T13:43:34Z.
+
 **[OS] RedButtonQuit: close the last window, and the app quits**
 
 I'm the maker of RedButtonQuit, a small macOS menu bar utility.
@@ -68,8 +73,40 @@ check. This does not promise the new menu link is already publicly released.
 - 17–22 seconds: End with `Free and open source`, `redbuttonquit.com`, and
   `Optional tips support development`.
 
-The actual capture and final trailer remain in the existing launch work. Native
-control must work before capturing; do not record unrelated desktop content.
+The actual capture and final trailer remain pending native control. Do not record
+unrelated desktop content. The actual About view is rendered in an isolated
+harness, without interaction. That is layout evidence, not a live app check.
+
+### Rendered launch assets (2026-10-02)
+
+`tools/render_launch_assets.py` uses the real app icon, the site's palette, local
+macOS fonts, Pillow, and ffmpeg. The approved dry opening lasts 9 seconds. The
+ending lasts 5 seconds. Both are rendered at 30 fps in 1280×720 and 1080×1080,
+with no audio, in ignored `dist/launch/`. A 1200×630 preview is published at
+https://redbuttonquit.com/social-preview.png and is the website's social card.
+Cloudflare deployment `d40473cc-fcc9-446a-a9f8-54caec315535` is live. The
+public PNG matches the local SHA-256; private-file exclusion checks pass.
+
+The full trailer is 9 + 3 + 5 + 5 seconds. The assembler requires real TextEdit
+and test-only history footage for the middle. Without both clips, it refuses to
+produce the complete trailer. `--prepare` makes only the bookends and poster.
+A fixture assembly in both formats verifies the 22-second duration, mixed input
+frame rates, letterboxing, labels, and absence of audio. Fixtures are marked
+`TEST FIXTURE / NOT APP FOOTAGE` and stay in ignored `build/support-review/`.
+They are not public demo files. The installed ffmpeg lacks `drawtext`; labels
+are rendered deterministically with Pillow and overlaid with ffmpeg instead.
+
+Prepare: `python3 tools/render_launch_assets.py --prepare`
+
+Finish after authorized real capture:
+`python3 tools/render_launch_assets.py --proof-clip /path/to/textedit.mp4 --settings-clip /path/to/test-history.mp4`
+
+The new native UI source is pushed in draft PR #7:
+https://github.com/initiator1/redbuttonquit/pull/7
+The signed, notarized v1.1.3 DMG is uploaded in a GitHub draft release. Its asset
+SHA-256 matches `00196bbd3b0ee2ea7e502e387207c4fdf9394b898db42307f4d1cd243b55d28c`.
+The public latest release stays at v1.1.2 until the native check passes.
+
 
 ## Red close button icon (2026-09-27)
 
