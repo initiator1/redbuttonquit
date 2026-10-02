@@ -1,4 +1,4 @@
-# Repo files that must never be served. Only index.html, the icons, and
+# Repo files that must never be served. Only index.html, the icons, social-preview.png, and
 # _headers are public.
 CLAUDE.md
 wrangler.jsonc

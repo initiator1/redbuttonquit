@@ -72,3 +72,9 @@ release/
 
 # Wrangler local state
 .wrangler/
+
+# Portmanager generates these from the workspace registry.
+.portmanager/
+
+# Python launch renderer cache
+__pycache__/

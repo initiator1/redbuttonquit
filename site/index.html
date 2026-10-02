@@ -11,7 +11,11 @@
 <meta property="og:description" content="Close the last window. The app quits. A free, open-source macOS utility.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://redbuttonquit.com/">
-<meta property="og:image" content="https://redbuttonquit.com/icon-512.png">
+<meta property="og:image" content="https://redbuttonquit.com/social-preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RedButtonQuit. Close the last window. The app quits.">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0E1012">
 <script>document.documentElement.className="js";</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -126,12 +130,18 @@ a{color:inherit}
 .btn--go:hover{transform:translateY(-2px);background:#FF7169}
 .btn--ghost{border-color:var(--etch-lit);color:var(--bone-dim)}
 .btn--ghost:hover{border-color:var(--bone-faint);color:var(--bone)}
+.tip-link{
+  display:inline-flex;align-items:center;min-height:44px;padding:.6rem .15rem;
+  color:var(--bone-dim);font-size:.95rem;text-underline-offset:.25em;
+}
+.tip-link:hover{color:var(--bone)}
+.tip-link:focus-visible{outline:2px solid var(--bone);outline-offset:4px;border-radius:3px}
 .meta{font-family:var(--mono);font-size:.72rem;color:var(--bone-faint);letter-spacing:.06em}
 
 /* ---------- the instrument ---------- */
 .rig{position:relative}
 .rig::before{
-  content:"";position:absolute;inset:-14% -8% 22%;
+  content:"";position:absolute;inset:-14% 0 22%;
   background:radial-gradient(60% 55% at 50% 45%,var(--red) 0%,transparent 70%);
   opacity:.1;filter:blur(46px);pointer-events:none;
 }
@@ -383,6 +393,7 @@ a{color:inherit}
           <a class="btn btn--go" href="https://github.com/initiator1/redbuttonquit/releases/latest">
             Download for macOS
           </a>
+          <a class="tip-link" href="https://ko-fi.com/initiatorworks?app=redbuttonquit">Leave a tip</a>
           <a class="btn btn--ghost" href="https://github.com/initiator1/redbuttonquit">Read the source</a>
         </div>
         <p class="meta" style="margin-top:1.1rem">v1.1.2 · 4.1 MB · Apple silicon and Intel · signed and notarized</p>
@@ -570,13 +581,13 @@ a{color:inherit}
         <p class="silk">Support the work</p>
         <h2 class="display">Free, and staying that way.</h2>
         <p>
-          RedButtonQuit is one person's work, given away under an MIT licence. There is no
-          paid tier and there won't be one. If it saved you a hundred trips to the Cmd-Q key,
-          a coffee is a good way to say so.
+          RedButtonQuit is free and open source, with no paid tier. If it makes your Mac
+          easier to use, you can leave a tip to support its development. Every feature
+          stays free, whether you tip or not.
         </p>
       </div>
       <div class="actions">
-        <a class="btn btn--go" href="https://ko-fi.com/initiatorworks?app=redbuttonquit">Buy me a coffee</a>
+        <a class="btn btn--go" href="https://ko-fi.com/initiatorworks?app=redbuttonquit">Support RedButtonQuit</a>
         <a class="btn btn--ghost" href="https://github.com/initiator1/redbuttonquit">Star it on GitHub</a>
       </div>
     </div>

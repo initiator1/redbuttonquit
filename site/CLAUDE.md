@@ -5,14 +5,17 @@ The public marketing site for RedButtonQuit, served at `redbuttonquit.com`.
 ## Contract
 
 - **No build step, no dependencies, no framework.** `index.html` is the whole site: inline CSS,
-  inline JS, two PNGs. Cloudflare Pages serves this directory as-is with an empty build command.
+  inline JS, three PNGs. Cloudflare Worker static assets serve this directory as-is.
   Keep it that way — a build step here buys nothing and adds a thing that can break.
 - The only outbound request the page makes is the Google Fonts stylesheet. Do not add analytics,
   tag managers, embedded video, or third-party scripts. The page's own pitch is that the product
   collects nothing; the site has to match.
 - Assets come from the real app. `icon-512.png` and `icon-128.png` are copied from
   `RedButtonQuit/Resources/Assets.xcassets/AppIcon.appiconset/`. If the app icon changes, copy
-  the new one; never hand-draw a substitute.
+  the new one; never hand-draw a substitute. `social-preview.png` uses that real icon and
+  deterministic brand text. From this directory, run
+  `python3 ../tools/render_launch_assets.py --prepare`, then copy
+  `../dist/launch/social-preview.png` here.
 
 ## Design
 
@@ -52,7 +55,10 @@ There is no test suite. Look at it:
 
 ```bash
 portmanager sync redbuttonquit
-python3 -m http.server "$PM_PORT_SITE" --bind 127.0.0.1   # from this directory
+set -a
+. ../.portmanager/ports.env   # from this directory
+set +a
+python3 -m http.server "$PM_PORT_SITE" --bind "$PM_HOST"
 ```
 
 Render with the Playwright headless shell, never the installed Chrome bundle — a hook blocks the
